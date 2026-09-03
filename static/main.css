@@ -1,0 +1,2892 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Meet Lineup — design system
+   Swim-themed (teal/aqua/navy). Light + dark with [data-theme] switching.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────
+   Lane Lab — color-inverted brand palette (single dark theme)
+   Logo blue (now bg):     #3b6fb5
+   Logo ivory (now text):  #fdf9ed
+   ──────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* surface — deep navy with cobalt undertones, sophisticated and easy on the eyes */
+  --bg:           #142640;     /* deep navy base */
+  --panel:        #1d3556;     /* cards — pop subtly above bg */
+  --panel-alt:    #264466;     /* alt rows / table headers */
+  --border:       rgba(253, 249, 237, 0.12);
+  --border-strong:rgba(253, 249, 237, 0.24);
+
+  /* text — ivory throughout */
+  --text:         #fdf9ed;
+  --text-soft:    rgba(253, 249, 237, 0.78);
+  --text-muted:   rgba(253, 249, 237, 0.55);
+  --text-faint:   rgba(253, 249, 237, 0.32);
+
+  /* accent — IVORY is the brand accent (buttons/links pop as ivory) */
+  --accent:       #fdf9ed;
+  --accent-hover: #ffffff;
+  --accent-soft:  rgba(253, 249, 237, 0.12);
+  --accent-text:  #142640;     /* deep navy for text-on-accent (button labels) */
+
+  /* secondary blue tone (used by hero gradient, etc) */
+  --navy:         #4a7fc7;     /* lighter cobalt for highlights */
+  --navy-soft:    rgba(74, 127, 199, 0.18);
+
+  /* status colors — bright, work against the deep navy bg */
+  --win-strong:   #34d399;
+  --win-mid:      #fbbf24;
+  --win-weak:     #f87171;
+  --info:         #93c5fd;
+
+  /* shadows — deeper for the dark theme */
+  --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow:       0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-lg:    0 16px 40px rgba(0, 0, 0, 0.50);
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: var(--bg);
+}
+html, body {
+  color: var(--text);
+  font-family: "Exo 2", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01", "ss03"; /* Inter's nicer alternates */
+  transition: background 0.2s, color 0.2s;
+  min-height: 100vh;
+}
+
+/* Full-screen backdrop: soft radial washes (below) + dotted texture (above) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 45% at 15% 8%,  color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%),
+    radial-gradient(60% 50% at 85% 30%, color-mix(in srgb, var(--navy)   28%, transparent) 0%, transparent 75%),
+    radial-gradient(70% 60% at 50% 100%, color-mix(in srgb, var(--navy)   18%, transparent) 0%, transparent 70%);
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px,
+                    color-mix(in srgb, var(--text) 14%, transparent) 1.2px,
+                    transparent 0);
+  background-size: 20px 20px;
+  opacity: 0.9;
+}
+
+/* Monospace only for times / numeric data — fontfeature 'tnum' for column alignment */
+.mono, td.num, .time {
+  font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95em;
+}
+
+/* ─── Top nav ─────────────────────────────────────────────────────────── */
+nav.topnav {
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  position: sticky; top: 0; z-index: 10;
+}
+nav.topnav .logo {
+  font-weight: 700;
+  font-size: 1.02rem;
+  color: var(--text);
+  letter-spacing: -0.015em;
+  display: flex; align-items: center; gap: 9px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+nav.topnav .logo:hover { opacity: 0.75; }
+nav.topnav .nav-links { display: flex; gap: 2px; flex: 1; }
+nav.topnav a {
+  color: var(--text-soft);
+  text-decoration: none;
+  font-size: 0.88rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.12s, color 0.12s;
+}
+nav.topnav a:hover { color: var(--text); background: var(--panel-alt); }
+
+/* Clear-lineup button — themed ghost, pushed to the right. Overrides the global
+   solid-accent button styles. Destructive, so it tints red on hover/armed. */
+.clear-lineup-btn {
+  margin-left: auto;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid transparent;   /* invisible at rest (reserves space) → box appears on hover */
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.clear-lineup-btn:hover {
+  color: var(--win-weak);
+  border-color: color-mix(in srgb, var(--win-weak) 55%, transparent);
+  background: color-mix(in srgb, var(--win-weak) 10%, transparent);
+  box-shadow: none;
+}
+.clear-lineup-btn.armed {
+  color: #fff;
+  background: var(--win-weak);
+  border-color: var(--win-weak);
+}
+.clear-lineup-btn.done {
+  color: var(--win-strong);
+  border-color: color-mix(in srgb, var(--win-strong) 55%, transparent);
+  background: color-mix(in srgb, var(--win-strong) 12%, transparent);
+}
+.clear-lineup-btn.failed {
+  color: var(--win-weak);
+  border-color: var(--win-weak);
+  background: color-mix(in srgb, var(--win-weak) 12%, transparent);
+}
+.clear-lineup-btn:disabled { cursor: default; opacity: 0.75; }
+nav.topnav a.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+nav.topnav .theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+nav.topnav .theme-toggle:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+/* ─── Page container ──────────────────────────────────────────────────── */
+.page {
+  padding: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ─── Typography ──────────────────────────────────────────────────────── */
+/* Display font for headings; body stays Inter. Orbitron is geometric/futurist,
+   so we treat headings like brand marks: tracked positive, slightly more line-height. */
+h1, h2, h3, .hero h1, .section-header {
+  font-family: "Orbitron", "Exo 2", -apple-system, BlinkMacSystemFont, sans-serif;
+  text-transform: uppercase;
+}
+h1 {
+  font-size: 1.55rem;
+  color: var(--text);
+  margin-bottom: 6px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+h2 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 24px 0 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+h3 {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+p { color: var(--text-soft); margin-bottom: 12px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+/* ─── Cards / Panels ──────────────────────────────────────────────────── */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.card:hover {
+  border-color: var(--border-strong);
+}
+.card h2 { margin-top: 0; }
+
+/* ─── Stepper — connected step sequence (setup page) ───────────────────────
+   Each step is a flex row: a left marker column (numbered dot + connecting
+   line) beside the step's card. The line is drawn in the marker column behind
+   the dot, so it never fights the card background; it spans from this dot down
+   to the next one and lights up (accent) as steps complete. */
+.stepper { --step-gap: 18px; --dot: 32px; }
+.step-row {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  margin-bottom: var(--step-gap);
+  transition: opacity 0.4s ease;
+}
+.step-row > .card { flex: 1; margin-bottom: 0; min-width: 0; }
+/* Stagger the unlock so steps brighten top-to-bottom instead of all at once,
+   tracking the connector line as it fills downward. */
+.step-row:nth-of-type(2) { transition-delay: 0.12s; }
+.step-row:nth-of-type(3) { transition-delay: 0.26s; }
+.step-row:nth-of-type(4) { transition-delay: 0.40s; }
+.step-row:nth-of-type(5) { transition-delay: 0.54s; }
+
+/* Availability step: your team + opponent side by side. */
+.avail-cols { display: flex; gap: 28px; flex-wrap: wrap; }
+.avail-col { flex: 1 1 240px; min-width: 0; }
+.avail-col h3 { font-size: 0.95rem; }
+
+/* Week-based ladder-upload recommendation (set by updateLadderRec). */
+.ladder-rec { font-size: 0.82rem; line-height: 1.5; margin: 6px 0 12px; }
+.ladder-rec:empty { display: none; }
+.ladder-rec.rec-strong {
+  padding: 9px 13px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--win-mid) 14%, transparent);
+  border-left: 3px solid var(--win-mid);
+  color: var(--text);
+}
+.ladder-rec.rec-mid { color: var(--win-mid); font-weight: 500; }
+.ladder-rec.rec-soft { color: var(--text-muted); }
+
+/* Prominent "a ladder is already saved" callout (so it's hard to miss). */
+.ladder-saved-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 10px 0 2px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--win-strong) 45%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--win-strong) 12%, transparent);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.ladder-saved-callout:empty { display: none; }
+.ladder-saved-check {
+  flex: 0 0 auto;
+  width: 20px; height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--win-strong);
+  color: var(--bg);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.8rem;
+}
+
+.step-marker {
+  position: relative;
+  flex: 0 0 var(--dot);
+  display: flex;
+  justify-content: center;
+}
+/* Dot. --dot-top is the dot's offset from the marker top; its center (used to
+   anchor the line) is --dot-top + half the dot height. */
+.stepper { --dot-top: 18px; }
+.step-num {
+  position: relative;
+  z-index: 1;
+  margin-top: var(--dot-top);
+  width: var(--dot); height: var(--dot);
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.95rem;
+  transition: background 0.2s, color 0.2s;
+}
+.step-num::before { content: attr(data-step); }
+/* Connecting line: from this dot's center down to the next dot's center.
+   The marker stretches to the row's height, so its 100% is this card's height;
+   add the inter-row gap to reach the next dot. Hidden on the last step. */
+.step-marker::before,
+.step-marker::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(var(--dot-top) + var(--dot) / 2);
+  height: calc(100% + var(--step-gap));
+  width: 2px;
+  z-index: 0;
+}
+/* Base track (always grey). */
+.step-marker::before {
+  transform: translateX(-50%);
+  background: var(--border);
+}
+/* Accent fill that wipes downward from this dot to the next when the step is
+   done — drives the "unlock flows down the line" feel. */
+.step-marker::after {
+  transform: translateX(-50%) scaleY(0);
+  transform-origin: top;
+  background: var(--accent);
+  transition: transform 0.5s ease;
+}
+.step-row:last-child .step-marker::before,
+.step-row:last-child .step-marker::after { display: none; }
+
+/* States */
+.step-row[data-status="active"] .step-num {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.step-row[data-status="done"] .step-num {
+  background: var(--win-strong);
+  color: #fff;
+}
+.step-row[data-status="done"] .step-num::before { content: "✓"; }
+/* A completed step's line fills (wipes down) toward the next step. */
+.step-row[data-status="done"] .step-marker::after { transform: translateX(-50%) scaleY(1); }
+/* Locked steps dim (card + dot) and ignore all clicks/typing until unlocked,
+   so you can't hit Next / Load Data / checkboxes in a step you haven't reached. */
+.step-row[data-status="locked"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ── Entrance: cards fade + slide up in sequence on load (echoes the stepper's
+   downward flow). Opacity lives on the card so it composes with the row's
+   locked-dim instead of fighting it. ── */
+@keyframes step-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+.step-row > .card { animation: step-enter 0.5s ease backwards; }
+.step-row:nth-of-type(1) > .card { animation-delay: 0.05s; }
+.step-row:nth-of-type(2) > .card { animation-delay: 0.13s; }
+.step-row:nth-of-type(3) > .card { animation-delay: 0.21s; }
+.step-row:nth-of-type(4) > .card { animation-delay: 0.29s; }
+.step-row:nth-of-type(5) > .card { animation-delay: 0.37s; }
+
+/* ── Dot pulse: a one-shot ivory ring when a step becomes active. ── */
+.step-num::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.step-row[data-status="active"] .step-num::after { animation: dot-pulse 0.7s ease-out; }
+@keyframes dot-pulse {
+  0%   { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0;   transform: scale(2.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-row > .card { animation: none; }
+  .step-row[data-status="active"] .step-num::after { animation: none; }
+}
+
+/* ─── Form fields ─────────────────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 4px; }
+label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+input[type=text], input[type=number], input[type=search], select, textarea {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 0.92rem;
+  border-radius: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+select { min-width: 200px; cursor: pointer; }
+
+textarea { width: 100%; resize: vertical; min-height: 64px; }
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+
+/* Manual time entry on the Build page */
+.manual-times {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.manual-time-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.manual-time-form input#mtName { flex: 1 1 160px; min-width: 140px; }
+.manual-time-form select#mtEvent { flex: 1 1 200px; min-width: 160px; }
+.manual-time-form input#mtTime { flex: 0 0 110px; max-width: 110px; }
+.manual-time-status { margin-top: 6px; min-height: 1em; }
+.manual-time-status.ok  { color: var(--accent); }
+.manual-time-status.err { color: var(--win-low, #e06c6c); }
+.manual-time-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.manual-time-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.mt-remove {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  min-height: 0;
+}
+.mt-remove:hover { color: var(--win-low, #e06c6c); }
+
+/* "Saved ✓" toast for immediate saving of availability / returning swimmers */
+.prefs-saved {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 60;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  background: var(--panel);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.prefs-saved.show { opacity: 1; transform: translateY(0); }
+.prefs-saved.ok  { color: var(--accent); border-color: var(--border-strong); }
+.prefs-saved.err { color: var(--win-low, #e06c6c); border-color: var(--win-low, #e06c6c); }
+
+/* Paste-to-mark-absent box on the availability step */
+.paste-absent {
+  margin: 0 0 14px;
+  padding: 10px 12px 12px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.paste-absent-label {
+  display: block;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
+  margin: 0 0 6px;
+}
+.paste-absent-box { min-height: 52px; font-size: 0.85rem; margin: 0; }
+.paste-absent-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.paste-absent-result { margin: 0; }
+/* Raw code / pasted-HTML boxes — mono, small */
+textarea.code-input {
+  font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* ─── Custom checkbox (replaces the OS-default control) ────────────────── */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--panel);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+input[type="checkbox"]:hover { border-color: var(--accent); }
+input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px; top: 1px;
+  width: 4px; height: 9px;
+  border: solid var(--accent-text);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ─── Custom file input (replaces the native "Choose File" button) ─────── */
+input[type="file"] {
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  max-width: 320px;
+}
+/* The ::file-selector-button itself is themed in the pill-buttons section
+   near the end of this file. */
+
+/* ─── Custom searchable combobox (wraps a <select> for progressive enhancement) ── */
+.combo {
+  position: relative;
+  min-width: 220px;
+  font: inherit;
+}
+.combo > select.combo-source { display: none; } /* hide native; combo replaces it */
+.combo-trigger {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+/* Override the global button:hover (solid accent fill + shadow) — the trigger
+   is a <button> but should stay a calm input-style box, just a stronger border. */
+.combo-trigger:hover {
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+.combo-trigger:focus, .combo[data-open="true"] .combo-trigger {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.combo-trigger .combo-caret {
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.18s;
+}
+.combo[data-open="true"] .combo-caret { transform: rotate(180deg); }
+.combo-trigger .combo-value-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-trigger .combo-placeholder { color: var(--text-muted); }
+
+.combo-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 100%;
+  max-width: 360px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  display: none;
+  overflow: hidden;
+}
+.combo[data-open="true"] .combo-popup { display: block; }
+.combo-search-wrap {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-alt);
+}
+.combo-search {
+  width: 100%;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+}
+.combo-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+/* Recolor the native (black) clear "x" to match the ivory theme. */
+.combo-search::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  width: 14px;
+  cursor: pointer;
+  background-color: var(--text-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18 6 6 18M6 6l12 12' stroke='black' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18 6 6 18M6 6l12 12' stroke='black' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.combo-search::-webkit-search-cancel-button:hover { background-color: var(--accent); }
+.combo-list {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.combo-option {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+}
+/* Selected option (not hovered): bold + accent text. */
+.combo-option[data-selected="true"] {
+  font-weight: 600;
+  color: var(--accent);
+}
+/* Active row (mouse hover OR keyboard): solid accent fill so it reads clearly
+   on the dark panel. Driven only by data-active — JS keeps exactly one row
+   active, so the selected row never stays filled next to the hovered one.
+   Listed last so it wins over the selected state when both apply. */
+.combo-option[data-active="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.combo-empty {
+  padding: 14px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.controls {
+  display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────────── */
+button, .btn {
+  background: var(--accent);
+  border: none;
+  color: var(--accent-text);
+  padding: 10px 22px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.08s, box-shadow 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
+  text-decoration: none;
+}
+button:hover, .btn:hover {
+  background: var(--accent-hover);
+  color: var(--accent-text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+button:active, .btn:active { transform: translateY(1px); }
+button:disabled, .btn:disabled {
+  opacity: 0.4; cursor: default; transform: none;
+}
+button.secondary, .btn.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+button.secondary:hover { background: var(--accent-soft); }
+button.ghost {
+  background: transparent;
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+}
+button.ghost:hover { background: var(--panel-alt); color: var(--text); }
+
+/* ─── Status messages ─────────────────────────────────────────────────── */
+.status {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin: 10px 0;
+  min-height: 1.3em;
+}
+.status.ok { color: var(--win-strong); }
+.status.error { color: var(--win-weak); }
+
+/* ─── Summary line / stat row ─────────────────────────────────────────── */
+.summary {
+  display: flex; gap: 28px; flex-wrap: wrap;
+  font-size: 0.92rem;
+  margin-bottom: 14px;
+}
+.summary > div { display: flex; flex-direction: column; gap: 2px; }
+.summary span { color: var(--text-muted); font-size: 0.78rem; }
+.summary strong { color: var(--text); font-weight: 600; font-size: 1rem; }
+
+/* ─── Stat cards (big number panels) ──────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow-sm);
+}
+.stat-label {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.stat-value.win-strong { color: var(--win-strong); }
+.stat-value.win-mid    { color: var(--win-mid); }
+.stat-value.win-weak   { color: var(--win-weak); }
+.stat-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Big headline win % panel */
+.headline-panel {
+  display: flex; align-items: center; gap: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.headline-pct {
+  font-size: 3rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1; min-width: 110px;
+}
+.headline-pct.win-strong { color: var(--win-strong); }
+.headline-pct.win-mid    { color: var(--win-mid); }
+.headline-pct.win-weak   { color: var(--win-weak); }
+.headline-info { font-size: 0.92rem; color: var(--text-soft); }
+.headline-info .label { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+
+/* ─── Tables ──────────────────────────────────────────────────────────── */
+table {
+  width: 100%; border-collapse: collapse;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  font-size: 0.88rem;
+}
+th {
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--panel-alt);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--panel-alt); }
+.num { text-align: right; }
+.zero { color: var(--text-faint); }
+.section-hdr td {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.total-row td {
+  border-top: 2px solid var(--border-strong);
+  color: var(--text); font-weight: 700;
+  padding-top: 11px;
+  background: var(--panel-alt);
+}
+
+/* ─── Win-prob badges (in tables) ─────────────────────────────────────── */
+.win-pct {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.win100 { background: var(--win-strong); color: white; }
+.win75  { background: color-mix(in srgb, var(--win-strong) 75%, transparent); color: white; }
+.win50  { background: color-mix(in srgb, var(--win-mid) 80%, transparent); color: white; }
+.win25  { background: color-mix(in srgb, var(--win-weak) 75%, transparent); color: white; }
+
+/* ─── Pills (view-toggle, badges) ─────────────────────────────────────── */
+.pill {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--panel-alt);
+  color: var(--text-soft);
+  text-decoration: none;
+  border: 1px solid transparent;
+  margin-right: 6px;
+}
+.pill:hover { background: var(--border); color: var(--text); }
+.pill.active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* ─── Details / collapsible (used for Advanced settings) ──────────────── */
+details {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+details summary {
+  padding: 14px 20px;
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+  display: flex; align-items: center; gap: 8px;
+  list-style: none;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::before {
+  content: "▸";
+  display: inline-block;
+  transition: transform 0.15s;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+details[open] summary::before { transform: rotate(90deg); }
+details summary:hover { background: var(--panel-alt); }
+details .details-body {
+  padding: 4px 20px 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── Roster checkbox list (for absences / imputation review) ─────────── */
+.checkbox-list {
+  max-height: 280px; overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.checkbox-list label {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: normal;
+}
+.checkbox-list label:last-child { border-bottom: none; }
+.checkbox-list label:hover { color: var(--accent); }
+.checkbox-list input[type=checkbox] { cursor: pointer; }
+.checkbox-list .swimmer-meta {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex; gap: 8px;
+}
+
+/* ─── Ambiguous-name confirmation rows ───────────────────────────────── */
+.name-flag-row {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px 18px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.name-flag-people { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.name-flag-person { display: flex; flex-direction: column; gap: 2px; font-size: 0.9rem; }
+.name-flag-person .swimmer-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 8px; }
+.name-flag-vs { color: var(--text-muted); font-size: 0.8rem; font-style: italic; }
+.name-flag-hint { font-size: 0.72rem; color: var(--text-muted); font-style: italic; width: 100%; }
+.name-flag-choice { display: flex; gap: 16px; font-size: 0.82rem; }
+.name-flag-choice label {
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; font-weight: normal; color: var(--text);
+}
+.name-flag-choice input[type=radio] { cursor: pointer; }
+
+/* Roster grid (absences) — wider, multi-column layout */
+.absence-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.absence-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.absence-search::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px; width: 14px; cursor: pointer;
+  background-color: var(--text-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18 6 6 18M6 6l12 12' stroke='black' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18 6 6 18M6 6l12 12' stroke='black' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.absence-search::-webkit-search-cancel-button:hover { background-color: var(--accent); }
+
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 14px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+.roster-grid label {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: normal;
+  color: var(--text);
+}
+
+/* ─── Inline helper notes ─────────────────────────────────────────────── */
+.note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 6px 0 12px;
+}
+
+/* ─── Empty state ─────────────────────────────────────────────────────── */
+.empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 60px 20px;
+  font-size: 0.95rem;
+}
+.empty a { color: var(--accent); }
+
+/* ─── Inline toggle switch (checkbox styled) ──────────────────────────── */
+.toggle-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.88rem; color: var(--text-soft);
+  cursor: pointer; user-select: none;
+}
+.toggle-row input[type=checkbox] { margin-top: 1px; }
+
+/* ─── Optimizer settings — collapsible panel styled to match the step cards ─── */
+details.settings-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 4px 0 16px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+details.settings-panel:hover { border-color: var(--border-strong); }
+details.settings-panel > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 20px;
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 600; font-size: 0.95rem;
+  color: var(--text);
+  user-select: none;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+details.settings-panel > summary::-webkit-details-marker { display: none; }
+details.settings-panel > summary::marker { content: ""; }
+.settings-summary-inner { display: flex; align-items: center; justify-content: space-between; }
+details.settings-panel > summary:hover { color: var(--accent); background: var(--accent-soft); }
+.settings-chevron {
+  width: 8px; height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  opacity: 0.65; margin-right: 3px;
+}
+details.settings-panel[open] > summary .settings-chevron { transform: rotate(-135deg); }
+details.settings-panel .details-body {
+  padding: 6px 20px 18px;
+  border-top: 1px solid var(--border);
+}
+/* Gear marker for the settings step: reuse the .step-num circle, drop the number,
+   center the gear icon; let the details fill the row exactly like a step card. */
+.step-num-gear::before { content: none; }
+.step-num-gear { display: flex; align-items: center; justify-content: center; }
+.step-num-gear svg { width: 15px; height: 15px; display: block; }
+.step-row > details.settings-panel { flex: 1; margin: 0; min-width: 0; }
+
+/* ─── Legacy class aliases (used by lineup/opponent/lastweek pages) ──── */
+.target-panel {
+  display: flex; align-items: center; gap: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 26px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.target-pct {
+  font-size: 2.6rem; font-weight: 700;
+  min-width: 100px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.target-info {
+  font-size: 0.92rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+.target-info .sub {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+.sub { color: var(--text-muted); font-size: 0.78rem; }
+.pct-easy     { color: var(--win-strong); }
+.pct-moderate { color: var(--win-mid); }
+.pct-hard     { color: var(--win-weak); }
+
+/* When .win-* classes appear on plain text (not as badges), color it */
+td.win100, td.win75, td.win50, td.win25,
+span.win100:not(.win-pct), span.win75:not(.win-pct),
+span.win50:not(.win-pct),  span.win25:not(.win-pct) {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.win100:not(.win-pct) { color: var(--win-strong); background: transparent; }
+.win75:not(.win-pct)  { color: var(--win-strong); background: transparent; }
+.win50:not(.win-pct)  { color: var(--win-mid);    background: transparent; }
+.win25:not(.win-pct)  { color: var(--win-weak);   background: transparent; }
+
+/* ─── Hero (landing page) ─────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: 84px 16px 56px;
+  position: relative;
+}
+/* Entrance: title -> lead -> CTA, ~150ms stagger, one-shot on load */
+.hero h1, .hero .hero-lead, .hero .btn-large {
+  opacity: 0;
+  animation: heroIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.hero h1          { animation-delay: 0.05s; }
+.hero .hero-lead  { animation-delay: 0.22s; }
+.hero .btn-large  { animation-delay: 0.38s; }
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero h1, .hero .hero-lead, .hero .btn-large {
+    opacity: 1;
+    animation: none;
+  }
+}
+.hero h1 {
+  font-size: clamp(2rem, 4.6vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.12;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 70%, var(--navy) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.hero-lead {
+  font-size: 1.18rem;
+  max-width: 660px;
+  margin: 0 auto 36px;
+  color: var(--text-soft);
+  line-height: 1.65;
+  font-weight: 400;
+}
+.hero-sub {
+  margin-top: 18px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+.btn-large {
+  font-size: 1.05rem;
+  padding: 14px 38px;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.22s ease-out,
+              background 0.15s;
+}
+.btn-large:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.45),
+    0 0 32px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.btn-large:active { transform: translateY(0); transition-duration: 0.08s; }
+.hero-cta-end {
+  text-align: center;
+  padding: 48px 0 16px;
+}
+.section-header {
+  text-align: center;
+  margin-top: 64px;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
+/* ─── "How it works" grid ─────────────────────────────────────────────── */
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+  margin-bottom: 28px;
+}
+.how-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px 26px 28px;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(.2,.8,.2,1),
+              box-shadow 0.2s cubic-bezier(.2,.8,.2,1),
+              border-color 0.2s;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 4%, transparent);
+}
+.how-card:hover,
+.how-card:active {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--text) 10%, transparent),
+              0 4px 12px color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.how-card .icon {
+  margin-bottom: 20px;
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg,
+              color-mix(in srgb, var(--accent) 18%, var(--panel)) 0%,
+              color-mix(in srgb, var(--accent) 5%, var(--panel)) 100%);
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+  transition: transform 0.25s cubic-bezier(.2,.8,.2,1);
+}
+.how-card:hover .icon {
+  transform: scale(1.05);
+}
+.how-card .icon svg { width: 28px; height: 28px; stroke: currentColor; fill: none; }
+.how-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: -0.005em;
+  margin-bottom: 10px;
+}
+.how-card p {
+  font-size: 0.94rem;
+  color: var(--text-soft);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─── Info-section details (the bottom collapsibles on landing) ──────── */
+.info-section { margin-top: 12px; }
+.info-list {
+  padding-left: 22px;
+  line-height: 1.75;
+  color: var(--text-soft);
+  font-size: 0.93rem;
+}
+.info-list li { margin-bottom: 8px; }
+.info-list li b { color: var(--text); font-weight: 600; }
+
+/* ─── Inline SVG icon utility classes ─────────────────────────────────── */
+.icon-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+.icon-inline svg {
+  width: 18px; height: 18px;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Lane Lab logo (raster image, wordmark baked in) */
+nav.topnav .logo .logo-img {
+  height: 64px;
+  width: auto;
+  display: block;
+}
+nav.topnav .logo::before { content: none; }
+
+/* Theme toggle button — uses inline SVG for sun/moon */
+nav.topnav .theme-toggle svg {
+  width: 16px; height: 16px;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* ─── Modernization tweaks ────────────────────────────────────────────── */
+/* Slightly more refined card shadow */
+.card {
+  border-radius: 14px;
+}
+
+/* Improve nav appearance with subtle background blur on scroll */
+nav.topnav {
+  backdrop-filter: saturate(180%) blur(8px);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+}
+
+/* Card reveal on scroll: hidden until .revealed is added by IntersectionObserver.
+   Stagger via inline --card-i index set in JS. */
+.how-card {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--card-i, 0) * 110ms);
+}
+.how-card.revealed { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .how-card { opacity: 1; transform: none; transition: none; }
+}
+
+/* ─── Info tabs (replaces old <details> sections on home) ────────────── */
+.info-tabs {
+  margin: 36px 0 24px;
+}
+.info-tab-bar {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+.info-tab {
+  flex: 1;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  padding: 12px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.18s ease;
+}
+.info-tab:hover { color: var(--text); background: transparent; }
+.info-tab.active { color: var(--accent); }
+/* Tab indicator = glowing outline, not a fill. Filter off so the border stays crisp. */
+.info-tab-bar.liquid-track .liquid-layer { filter: none; }
+.info-tab-bar.liquid-track .liquid-blob {
+  border-radius: 9px;
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+/* Tab-bar overrides: snap fast, drop the morphing trail (the trail reads as
+   "glitchy" on small targets and is only useful for the card-fill effect). */
+nav.topnav .nav-links.liquid-track .liquid-blob {
+  transition:
+    left   0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    top    0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    width  0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.18s ease-out,
+    background 0.2s ease;
+}
+.info-tab-bar.liquid-track .liquid-blob {
+  transition:
+    left   0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    top    0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    width  0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease-out,
+    background 0.2s ease;
+}
+nav.topnav .nav-links.liquid-track .liquid-blob-trail,
+.info-tab-bar.liquid-track .liquid-blob-trail {
+  display: none;
+}
+
+.info-panels {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 26px 30px;
+}
+.info-panel { display: none; }
+.info-panel.active {
+  display: block;
+  animation: infoPanelIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.info-panel .info-list { margin: 0; padding-left: 22px; line-height: 1.7; }
+.info-panel .info-list li { margin-bottom: 10px; }
+.info-panel .info-list li:last-child { margin-bottom: 0; }
+@keyframes infoPanelIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Liquid highlight (metaball morph) ─────────────────────────────── */
+.liquid-track { position: relative; isolation: isolate; }
+.liquid-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  filter: url(#liquid-goo);
+  overflow: visible;
+}
+.liquid-blob {
+  position: absolute;
+  left: 0; top: 0;
+  width: 0; height: 0;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  opacity: 0;
+  pointer-events: none;
+  will-change: width, height, left, top, opacity;
+  transition:
+    /* Position: gravity-style accel (slow start, fast finish) so the drop "falls" into place */
+    left   0.34s cubic-bezier(0.55, 0.06, 0.78, 0.28),
+    top    0.34s cubic-bezier(0.55, 0.06, 0.78, 0.28),
+    /* Size: fast then settles, like liquid sloshing to fill */
+    width  0.7s  cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.7s  cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.22s ease-out,
+    background 0.2s ease;
+}
+.liquid-blob-trail {
+  background: var(--accent-soft);
+  border-radius: 999px;
+  /* Trail accelerates as it falls toward the entry drop, then fades */
+  transition:
+    left   0.55s cubic-bezier(0.55, 0.06, 0.78, 0.28),
+    top    0.55s cubic-bezier(0.55, 0.06, 0.78, 0.28),
+    width  0.55s cubic-bezier(0.55, 0.06, 0.78, 0.28),
+    height 0.55s cubic-bezier(0.55, 0.06, 0.78, 0.28),
+    opacity 0.55s ease-in;
+}
+/* Items above the blob layer */
+.liquid-track > *:not(.liquid-layer) { position: relative; z-index: 1; }
+
+/* Nav: turn off the per-link backgrounds so the blob handles them */
+nav.topnav .nav-links.liquid-track a:hover,
+nav.topnav .nav-links.liquid-track a.active {
+  background: transparent;
+}
+nav.topnav .nav-links.liquid-track a.active { color: var(--accent); font-weight: 600; }
+nav.topnav .nav-links.liquid-track .liquid-blob {
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* Card grids: soften the static card surface a touch and let the blob pop */
+/* Cards aren't buttons — kill mobile tap highlight and text selection so clicks don't
+   produce a "lean" / selection flicker. */
+.how-card {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+/* Icon SVGs: no drag preview, no pointer-event interception. Hover still triggers via .how-card. */
+.how-card .icon svg {
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* Card icon micro-motion on hover — distinct per card. */
+.how-card .icon svg *,
+.how-card .icon svg .die {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease,
+    stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Predict: a radar ping — inner dot blooms outward, outer ring expands and softens */
+.card-predict:hover .icon svg circle:nth-of-type(1) { transform: scale(1.12); opacity: 0.55; }
+.card-predict:hover .icon svg circle:nth-of-type(2) { transform: scale(1.18); }
+.card-predict:hover .icon svg circle:nth-of-type(3) { transform: scale(2.6);  opacity: 0.5; }
+
+/* Simulate: the two dice tilt apart and lift, like a roll mid-air */
+.card-simulate:hover .icon svg .die-back  { transform: rotate(-12deg) translate(-1px, 1.5px); }
+.card-simulate:hover .icon svg .die-front { transform: rotate(9deg)   translate(1px, -1.5px); }
+
+/* Hedge: the check draws in on hover, snaps invisible immediately on hover-out */
+.card-hedge .icon svg path:nth-of-type(2) {
+  stroke-dasharray: 12;
+  stroke-dashoffset: 12;
+  transition: stroke-dashoffset 0s;
+}
+.card-hedge:hover .icon svg path:nth-of-type(2) {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .how-card .icon svg *, .how-card .icon svg .die { transition: none; }
+  .card-hedge .icon svg path:nth-of-type(2) { stroke-dasharray: 0; stroke-dashoffset: 0; }
+}
+
+/* Per-card outline trace: a single stroke flows around the card perimeter on hover */
+.how-card { position: relative; isolation: isolate; }
+.how-card .card-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
+}
+.how-card .card-outline rect {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 65%, transparent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  /* pathLength normalizes the perimeter to 100, so dasharray/offset live in 0–100 */
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  opacity: 0;
+  /* Hover-out: fade the outline away, then snap the dashoffset back invisibly so the next hover redraws fresh */
+  transition: opacity 0.7s ease-out, stroke-dashoffset 0s linear 0.7s;
+}
+.how-card:hover .card-outline rect {
+  stroke-dashoffset: 0;
+  opacity: 1;
+  /* Hover-in: draw the stroke around the perimeter, opacity snaps in immediately */
+  transition: stroke-dashoffset 0.85s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.1s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .how-card .card-outline rect { transition: stroke-dashoffset 0.2s ease-out; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-blob { transition: opacity 0.15s ease-out !important; }
+}
+
+/* ─── Loading overlay (full-page, shown while optimize runs) ─────────── */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-out;
+}
+.loading-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.loading-card {
+  text-align: center;
+  padding: 36px 48px;
+  max-width: 460px;
+}
+/* ─── Lane Lab logo loading animation ──────────────────────────── */
+.loading-card .logo-svg {
+  width: 280px;
+  height: auto;
+  display: block;
+  margin: 0 auto 28px;
+}
+.loading-card .logo-svg path,
+.loading-card .logo-svg rect { fill: var(--accent); }
+
+.notch-track {
+  transform-box: fill-box;
+  offset-anchor: center;
+  offset-rotate: auto;
+  animation: notch-move var(--duration, 3.6s) linear infinite backwards;
+  animation-delay: var(--delay, 0s);
+}
+.notch-dot {
+  transform-box: fill-box;
+  animation: notch-scale var(--duration, 3.6s) linear infinite backwards;
+  animation-delay: var(--delay, 0s);
+}
+.lane1-n1, .lane1-n2 { offset-path: path('M 317.15 288.92 H 469.14 C 486.37 288.81 500.79 275.01 501.55 257.89 L 501.55 228'); }
+.lane2-n1, .lane2-n2 { offset-path: path('M 317.36 332.16 H 484.31 C 507.97 328.74 525.83 311.46 525.71 292.17'); }
+.lane3-n1, .lane3-n2 { offset-path: path('M 317.36 376.30 H 484.27 C 507.12 374.44 524.29 358.42 524.98 338.39'); }
+.lane1-n1, .lane1-n2,
+.lane2-n1, .lane2-n2,
+.lane3-n1, .lane3-n2 { --duration: 4.3s; }
+.lane1-n1 { --delay: 1.5s;  } .lane1-n2 { --delay: 3.65s; }
+.lane2-n1 { --delay: 1.9s;  } .lane2-n2 { --delay: 4.05s; }
+.lane3-n1 { --delay: 2.3s;  } .lane3-n2 { --delay: 4.45s; }
+.lane1-n1 .notch-dot, .lane1-n2 .notch-dot { animation-name: notch-scale-lane1; }
+
+@keyframes notch-move {
+  0%   { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+@keyframes notch-scale {
+  0%   { scale: 0; } 10%  { scale: 1; }
+  85%  { scale: 1; } 97%  { scale: 0; } 100% { scale: 0; }
+}
+@keyframes notch-scale-lane1 {
+  0%   { scale: 0; } 10%  { scale: 1; }
+  84%  { scale: 1; } 100% { scale: 0; }
+}
+.loading-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.loading-message {
+  font-size: 1.05rem;
+  color: var(--text);
+  min-height: 1.4em;
+  transition: opacity 0.3s ease;
+  margin-bottom: 14px;
+}
+.loading-message.fading { opacity: 0; }
+.loading-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ─── Lineup page ────────────────────────────────────────────────────── */
+.lineup-header { margin-bottom: 28px; }
+.lineup-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.lineup-title-row h1 { margin-bottom: 0; }
+.lineup-title-row .vs {
+  color: var(--text-muted);
+  font-family: "Exo 2", sans-serif;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.7em;
+  margin: 0 0.2em;
+}
+.lineup-meta { color: var(--text-soft); font-size: 0.95rem; }
+.lineup-meta .dot { color: var(--text-muted); margin: 0 8px; }
+
+.lineup-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  padding: 18px 22px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+.headline-pct {
+  font-family: "Orbitron", sans-serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.headline-pct.pct-easy     { color: var(--win-strong); }
+.headline-pct.pct-moderate { color: var(--win-mid); }
+.headline-pct.pct-hard     { color: var(--win-weak); }
+.headline-pct.pct-extreme  { color: var(--text-muted); }
+.headline-label { color: var(--text-soft); font-size: 0.95rem; }
+
+.lineup-totals {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.total-cell {
+  flex: 1;
+  min-width: 140px;
+  padding: 12px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.total-cell span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.total-cell strong {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.15rem;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.opp-toggle-row { margin-bottom: 22px; }
+.opp-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.opp-mode {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+.opp-mode:hover:not(:disabled) { color: var(--text); background: transparent; }
+.opp-mode.active { color: var(--accent); }
+.opp-mode:disabled { color: var(--text-faint); cursor: not-allowed; opacity: 0.5; }
+.opp-toggle.liquid-track .liquid-blob {
+  border-radius: 8px;
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.opp-toggle.liquid-track .liquid-layer { filter: none; }
+.opp-toggle.liquid-track .liquid-blob-trail { display: none; }
+.opp-toggle.liquid-track .liquid-blob {
+  transition:
+    left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease-out;
+}
+
+.lane-grid--hidden { display: none !important; }
+
+.lineup-events {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 24px;
+  align-items: start;
+}
+/* Boys / Girls each as a vertical stack of event cards. */
+.events-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.events-col-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+.lineup-event {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.event-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.event-name {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: "Orbitron", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.event-age { color: var(--accent); font-weight: 600; font-size: 0.76rem; }
+.event-gen { color: var(--text); font-weight: 600; font-size: 0.76rem; }
+.event-dist { color: var(--text-soft); font-size: 0.76rem; }
+.event-stroke { color: var(--text-soft); font-size: 0.76rem; }
+.event-stats { display: flex; gap: 12px; align-items: baseline; }
+.event-winpct {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85rem;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.event-winpct.win100 { background: color-mix(in srgb, var(--win-strong) 18%, transparent); color: var(--win-strong); }
+.event-winpct.win75  { background: color-mix(in srgb, var(--win-strong) 12%, transparent); color: var(--win-strong); }
+.event-winpct.win50  { background: color-mix(in srgb, var(--win-mid) 14%, transparent);    color: var(--win-mid); }
+.event-winpct.win25  { background: color-mix(in srgb, var(--win-weak) 14%, transparent);   color: var(--win-weak); }
+.event-pts { color: var(--text-soft); font-size: 0.85rem; font-family: "JetBrains Mono", monospace; }
+
+.lane-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+.lane {
+  position: relative;
+  padding: 7px 5px;
+  border-radius: 7px;
+  /* Mixed against the card panel (not transparent) so it stays opaque —
+     identical color, but page-background bubbles can't show through. */
+  background: color-mix(in srgb, var(--panel-alt) 60%, var(--panel));
+  border: 1px solid var(--border);
+  /* Fixed height (fits a 2-line name + time) so a long name can't make one
+     event block taller than the rest — names clamp at 2 lines below. */
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lane-us {
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.lane-opp {
+  background: color-mix(in srgb, var(--navy) 18%, var(--panel));
+  border-color: color-mix(in srgb, var(--navy) 45%, var(--border));
+}
+.lane-empty .lane-swimmer { color: var(--text-faint); }
+.lane-num {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.60rem;
+  letter-spacing: 0.10em;
+  color: var(--text-muted);
+  text-align: center;
+}
+.lane-us .lane-num { color: var(--accent); }
+.lane-opp .lane-num { color: color-mix(in srgb, var(--navy) 80%, var(--text)); }
+.lane-swimmer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+  flex: 1;
+  justify-content: center;
+}
+.lane-name {
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.2;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.lane-time {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+.swim-up { color: var(--accent); margin-right: 2px; }
+.lane-empty-mark { color: var(--text-faint); }
+.lane-norealtime {
+  font-size: 0.62rem;
+  line-height: 1.3;
+  font-style: italic;
+  color: var(--text-faint);
+}
+/* "No real time — pick one": a league-average fill the coach should choose. */
+.lane-pickone {
+  font-size: 0.66rem;
+  line-height: 1.25;
+  font-style: italic;
+  color: var(--accent);
+  opacity: 0.85;
+}
+.lane-pickone-row .lane-swimmer { color: var(--accent); }
+.lane-pickone-row {
+  border-style: dashed;
+  background: var(--accent-soft);
+}
+/* Inline picker on a "no real time" lane (Results page). */
+select.lane-pick {
+  min-width: 0;
+  width: 100%;
+  font-size: 0.66rem;
+  padding: 2px 18px 2px 6px;
+  min-height: 0;
+  color: var(--accent);
+  background-color: transparent;
+  border: 1px dashed var(--border-strong);
+  cursor: pointer;
+  /* native select chrome ignores the styling above on macOS */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 5px center;
+  background-size: 10px;
+}
+select.lane-pick.has-pick {
+  color: var(--text);
+  border-style: solid;
+  font-style: normal;
+}
+.lane-pickone-row.lane-picked { border-style: solid; background: transparent; }
+
+/* ─── Relays section ─────────────────────────────────────────────────── */
+.relays-header { margin-top: 32px; }
+.relay-gender-header {
+  font-size: 1rem;
+  margin: 18px 0 10px;
+}
+.relay-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.relay-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.relay-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.relay-card-name {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.relay-card-style { color: var(--text-muted); margin-left: 6px; }
+.relay-card-stats {
+  display: flex;
+  gap: 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+}
+.relay-time { color: var(--text-soft); }
+.relay-winpct { font-weight: 600; padding: 1px 8px; border-radius: 5px; }
+.relay-winpct.win100 { background: color-mix(in srgb, var(--win-strong) 18%, transparent); color: var(--win-strong); }
+.relay-winpct.win75  { background: color-mix(in srgb, var(--win-strong) 12%, transparent); color: var(--win-strong); }
+.relay-winpct.win50  { background: color-mix(in srgb, var(--win-mid) 14%, transparent);    color: var(--win-mid); }
+.relay-winpct.win25  { background: color-mix(in srgb, var(--win-weak) 14%, transparent);   color: var(--win-weak); }
+.relay-exp { color: var(--text-muted); }
+.relay-legs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.relay-legs li {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  gap: 8px;
+  font-size: 0.85rem;
+  padding: 4px 0;
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+.relay-legs li:first-child { border-top: none; }
+.leg-stroke {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  align-self: center;
+}
+.leg-name { color: var(--text); }
+.leg-time { color: var(--text-muted); font-family: "JetBrains Mono", monospace; font-size: 0.8rem; }
+.relay-gender-total {
+  color: var(--text-soft);
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+}
+.relay-grand-total {
+  margin-top: 22px;
+  padding: 14px 18px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.relay-grand-total strong { color: var(--accent); font-size: 1.1rem; }
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-soft);
+}
+.empty-state h1 { margin-bottom: 14px; }
+.empty-state .btn { margin-top: 22px; }
+
+/* ─── Mobile / narrow ─────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .page { padding: 16px; }
+  nav.topnav { padding: 10px 16px; gap: 16px; }
+  .nav-links { overflow-x: auto; }
+  .headline-panel { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .controls { flex-direction: column; align-items: stretch; }
+  .field { width: 100%; }
+  .lineup-events { grid-template-columns: 1fr; }
+  .lane-grid { grid-template-columns: repeat(3, 1fr); }
+  .lane { min-height: 50px; }
+  .relay-list { grid-template-columns: 1fr; }
+}
+
+/* ─── Score-target row ─────────────────────────────────────────────────────── */
+.score-target-row {
+  font-size: 0.85rem;
+  color: var(--text-muted, #888);
+  margin: 4px 0 10px;
+}
+.score-target-row strong { color: var(--text, inherit); }
+
+/* ─── Scenarios section ────────────────────────────────────────────────────── */
+.scenarios-section {
+  margin: 16px 0 8px;
+}
+/* Pill switcher — one scenario card at a time. Mirrors the opp-mode toggle. */
+.scenario-pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px;
+  margin-bottom: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.scenario-pill {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+.scenario-pill:hover { color: var(--text); background: transparent; }
+.scenario-pill.active { color: var(--accent); }
+.scenario-pills.liquid-track .liquid-layer { filter: none; }
+.scenario-pills.liquid-track .liquid-blob-trail { display: none; }
+.scenario-pills.liquid-track .liquid-blob {
+  border-radius: 8px;
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent) 28%, transparent);
+  transition:
+    left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.scenario-card--hidden { display: none; }
+
+/* ─── Backend-stub hint — marks where backend work is still needed ─────── */
+.backend-hint {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; line-height: 1.5;
+  color: var(--win-mid);
+  background: color-mix(in srgb, var(--win-mid) 10%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--win-mid) 45%, transparent);
+  border-radius: 8px; padding: 7px 12px;
+}
+.backend-hint::before { content: "🛠"; }
+.backend-hint code {
+  background: color-mix(in srgb, var(--win-mid) 16%, transparent);
+  padding: 1px 5px; border-radius: 4px;
+}
+
+/* ─── Results header actions (Check / Export) ──────────────────────────── */
+.lineup-header-actions { display: inline-flex; gap: 8px; margin-left: auto; }
+.lineup-action { font-size: 0.82rem; padding: 8px 14px; }
+.lineup-action svg { width: 13px; height: 13px; flex: none; }
+
+/* ─── Check page (what-if lineup lab) ──────────────────────────────────── */
+.check-compare {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 10px;
+}
+.check-cmp-cell { display: flex; flex-direction: column; gap: 2px; }
+.cmp-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); }
+.cmp-pts { font-family: "Orbitron", sans-serif; font-size: 1.3rem; color: var(--accent); }
+.cmp-win { font-size: 0.85rem; color: var(--text-soft); }
+.cmp-delta { font-size: 0.8rem; color: var(--text-muted); min-height: 1em; }
+.cmp-delta.dirty  { color: var(--win-mid); }
+.cmp-delta.better { color: var(--win-strong); font-weight: 600; }
+.cmp-delta.worse  { color: var(--win-weak); font-weight: 600; }
+.check-cmp-arrow { color: var(--text-faint); font-size: 1.2rem; }
+.check-actions { margin-left: auto; display: inline-flex; gap: 8px; }
+.cmp-scope { font-size: 0.72rem; color: var(--text-faint); text-transform: none; letter-spacing: 0; }
+.check-meetwin { font-size: 0.85rem; color: var(--text-soft); margin: 8px 0 4px; min-height: 1em; }
+.check-meetwin:empty { display: none; }
+
+.check-issues { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.check-issues:empty { display: none; }
+.check-ok { font-size: 0.85rem; color: var(--win-strong); }
+.check-issue { font-size: 0.85rem; padding: 7px 12px; border-radius: 8px; }
+.check-error {
+  color: var(--win-weak);
+  background: color-mix(in srgb, var(--win-weak) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--win-weak) 35%, transparent);
+}
+.check-warn {
+  color: var(--win-mid);
+  background: color-mix(in srgb, var(--win-mid) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--win-mid) 35%, transparent);
+}
+
+.check-event .check-slots { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.swap-select { width: 100%; min-width: 0; font-size: 0.85rem; cursor: pointer; }
+.swap-select.changed { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.swap-select.invalid { border-color: var(--win-weak); box-shadow: 0 0 0 2px color-mix(in srgb, var(--win-weak) 25%, transparent); }
+/* Swimmer slots use the site combobox (the select hides inside .combo), so the
+   changed/invalid highlight surfaces on the visible trigger instead. */
+.check-slots .combo { width: 100%; min-width: 0; }
+.check-slots .combo-trigger { font-size: 0.85rem; padding: 7px 10px; }
+.combo:has(> .swap-select.changed) .combo-trigger { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.combo:has(> .swap-select.invalid) .combo-trigger { border-color: var(--win-weak); box-shadow: 0 0 0 2px color-mix(in srgb, var(--win-weak) 25%, transparent); }
+
+.check-swaps { margin-top: 22px; }
+
+.check-filter { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.check-filter label { font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; }
+.check-filter .combo { min-width: 150px; }
+.lineup-events.single-col { grid-template-columns: 1fr; }
+
+.check-upload {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 20px; margin-bottom: 14px;
+}
+.check-upload h3 { font-size: 0.95rem; }
+.check-upload-row { display: inline-flex; gap: 10px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+.check-upload .backend-hint { flex-basis: 100%; }
+.scenarios-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted, #888);
+  margin: 0 0 8px;
+}
+.scenarios-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.scenario-card {
+  /* Opaque equivalent of the old rgba(255,255,255,.04)-over-page-bg, so the
+     bubble field can't float "inside" the card. */
+  background: var(--card-bg, color-mix(in srgb, #ffffff 4%, var(--bg)));
+  border: 1px solid var(--border, rgba(255,255,255,.08));
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.scenario-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.scenario-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.scenario-winpct {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+.scenario-winpct.win100 { background: color-mix(in srgb, var(--win-strong) 18%, transparent); color: var(--win-strong); }
+.scenario-winpct.win75  { background: color-mix(in srgb, var(--win-strong) 12%, transparent); color: var(--win-strong); }
+.scenario-winpct.win50  { background: color-mix(in srgb, var(--win-mid) 14%, transparent);    color: var(--win-mid); }
+.scenario-winpct.win25  { background: color-mix(in srgb, var(--win-weak) 14%, transparent);   color: var(--win-weak); }
+.scenario-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.scenario-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted, #888);
+}
+.scenario-medians {
+  font-size: 0.78rem;
+  color: var(--text-muted, #999);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Motion pack — swim-themed animation layer.
+   Everything here is additive (no layout changes) and fully disabled
+   under prefers-reduced-motion at the bottom of this section.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Page enter: content surfaces like coming up for air ─────────────── */
+main.page { animation: pageEnter 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+/* ─── Swim-in reveal: cards surface + glide up as they enter the viewport.
+   .reveal-pending is added by JS at init (so no-JS pages stay visible),
+   .reveal-in swaps in on intersection with a per-batch cascade delay. */
+.reveal-pending { opacity: 0; transform: translateY(14px); }
+.reveal-in {
+  opacity: 1;
+  transform: none;
+  /* border-color / box-shadow ride along so card hover stays smooth after
+     reveal (a second transition rule would override this one). */
+  transition:
+    opacity      0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    transform    0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s  ease-out,
+    box-shadow   0.2s  ease-out;
+  transition-delay: var(--reveal-delay, 0ms), var(--reveal-delay, 0ms), 0ms, 0ms;
+}
+
+/* Within an event card, the six lanes splash in left → right. */
+.lineup-event.reveal-pending .lane { opacity: 0; transform: translateY(8px) scale(0.97); }
+.lineup-event.reveal-in .lane {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity   0.38s ease-out,
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lineup-event.reveal-in .lane:nth-child(1) { transition-delay: calc(var(--reveal-delay, 0ms) + 40ms); }
+.lineup-event.reveal-in .lane:nth-child(2) { transition-delay: calc(var(--reveal-delay, 0ms) + 80ms); }
+.lineup-event.reveal-in .lane:nth-child(3) { transition-delay: calc(var(--reveal-delay, 0ms) + 120ms); }
+.lineup-event.reveal-in .lane:nth-child(4) { transition-delay: calc(var(--reveal-delay, 0ms) + 160ms); }
+.lineup-event.reveal-in .lane:nth-child(5) { transition-delay: calc(var(--reveal-delay, 0ms) + 200ms); }
+.lineup-event.reveal-in .lane:nth-child(6) { transition-delay: calc(var(--reveal-delay, 0ms) + 240ms); }
+
+/* Relay legs swim in one after another. */
+.relay-card.reveal-pending .relay-legs li { opacity: 0; transform: translateX(-8px); }
+.relay-card.reveal-in .relay-legs li {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.35s ease-out, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.relay-card.reveal-in .relay-legs li:nth-child(1) { transition-delay: calc(var(--reveal-delay, 0ms) + 50ms); }
+.relay-card.reveal-in .relay-legs li:nth-child(2) { transition-delay: calc(var(--reveal-delay, 0ms) + 100ms); }
+.relay-card.reveal-in .relay-legs li:nth-child(3) { transition-delay: calc(var(--reveal-delay, 0ms) + 150ms); }
+.relay-card.reveal-in .relay-legs li:nth-child(4) { transition-delay: calc(var(--reveal-delay, 0ms) + 200ms); }
+
+/* ─── Win-probability pool: the headline panel fills with water ─────────
+   JS injects .win-water and animates the fill height to the win %.
+   Two wave layers drift in opposite directions on the surface. */
+.lineup-headline { position: relative; overflow: hidden; }
+.lineup-headline > * { position: relative; z-index: 1; }
+.lineup-headline .win-water {
+  position: absolute; inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.win-water-fill {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 0;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--navy) 30%, transparent),
+    color-mix(in srgb, var(--navy) 12%, transparent));
+  transition: height 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.win-wave-row {
+  position: absolute;
+  bottom: 100%; left: 0;
+  width: 200%; height: 16px;
+  display: flex;
+  animation: waveDrift 9s linear infinite;
+}
+.win-wave-row svg { width: 50%; height: 100%; flex: none; display: block; }
+.win-wave-row path { fill: color-mix(in srgb, var(--navy) 30%, transparent); }
+.win-wave-row2 {
+  animation-duration: 13s;
+  animation-direction: reverse;
+  height: 12px;
+  opacity: 0.6;
+}
+@keyframes waveDrift {
+  to { transform: translateX(-50%); }
+}
+
+/* ─── Splash transition on scenario-card switches ───────────────────────
+   (Toggles via display:none, so the keyframe re-runs on every show. The
+   predicted/last-week grids are excluded — splashing ~40 grids at once
+   janks the toggle.) */
+.scenario-card { animation: cardSplash 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes cardSplash {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+/* ─── Articulated freestyle stroke ──────────────────────────────────────
+   Arms windmill a full revolution around the shoulder joint (clockwise =
+   pull under the body, recover over the top, for a right-facing swimmer);
+   the second arm runs half a cycle behind. Legs flutter around the hip in
+   opposite phase. transform-box: view-box pins the joints in viewBox units. */
+.scroll-lane-swimmer svg { overflow: visible; }
+.sw-arm {
+  transform-box: view-box;
+  transform-origin: 20.5px 7px;       /* shoulder */
+  animation: swArmSpin 1.5s linear infinite;
+}
+.sw-arm2 { animation-delay: -0.75s; }
+.sw-leg {
+  transform-box: view-box;
+  transform-origin: 8.5px 9.5px;      /* hip */
+  animation: swLegKick 0.45s ease-in-out infinite alternate;
+}
+.sw-leg2 { animation-delay: -0.225s; }
+@keyframes swArmSpin {
+  to { transform: rotate(360deg); }
+}
+@keyframes swLegKick {
+  from { transform: rotate(-9deg); }
+  to   { transform: rotate(9deg); }
+}
+
+/* ─── Bubble field: neon bubble rings rising through the whole page ─────
+   Anchored to the document (height set by JS), so bubbles travel with the
+   page when you scroll instead of sitting fixed on the screen. */
+.bubble-field {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.bubble-field .bubble {
+  position: absolute;
+  border-radius: 50%;
+  /* Hollow neon-blue rings with a soft glow — just the bubble outline. */
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, var(--info) 80%, transparent);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--info) 45%, transparent),
+    inset 0 0 4px color-mix(in srgb, var(--info) 35%, transparent);
+  opacity: 0;
+  animation: bubbleFloat 24s linear infinite;
+}
+@keyframes bubbleFloat {
+  0%   { transform: translate(0, 0);              opacity: 0; }
+  6%   { opacity: 0.8; }
+  50%  { transform: translate(var(--wob, 18px), -55vh); }
+  94%  { opacity: 0.55; }
+  100% { transform: translate(0, -110vh);         opacity: 0; }
+}
+
+/* ─── Scroll lane rope: progress bar styled as a pool lane divider ──────
+   Lives on the bottom edge of the sticky nav (appended there by JS), so the
+   swimmer dot has room and nothing clips against the viewport edge. */
+.scroll-lane {
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 3px;
+  z-index: 60;
+  pointer-events: none;
+}
+.scroll-lane-rope {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg,
+    var(--accent) 0 16px,
+    color-mix(in srgb, var(--navy) 70%, transparent) 16px 32px);
+  opacity: 0.65;
+  clip-path: inset(0 calc(100% - var(--p, 0%)) 0 0);
+}
+.scroll-lane-swimmer {
+  position: absolute;
+  top: 50%; left: var(--p, 0%);
+  width: 26px; height: 13px;
+  margin: -6.5px 0 0 -8px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.scroll-lane-swimmer svg {
+  display: block;
+  width: 100%; height: 100%;
+  animation: swimmerKick 1.1s ease-in-out infinite;
+}
+/* Gentle stroke rhythm: the glyph rocks and bobs as it glides. */
+@keyframes swimmerKick {
+  0%, 100% { transform: translateY(0)      rotate(0deg); }
+  50%      { transform: translateY(-1.5px) rotate(-5deg); }
+}
+
+/* ─── Card shine: light sweeps across event/relay cards on hover ────────
+   Excludes the Check editor cards — their combobox popups would be clipped
+   by overflow:hidden. */
+.lineup-event:not(.check-event), .relay-card { position: relative; overflow: hidden; }
+.lineup-event:not(.check-event):hover, .relay-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow);
+}
+.lineup-event:not(.check-event)::after, .relay-card::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: -45%; width: 38%;
+  background: linear-gradient(105deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 7%, transparent) 45%,
+    color-mix(in srgb, var(--accent) 12%, transparent) 52%,
+    transparent);
+  transform: skewX(-14deg);
+  opacity: 0;
+  pointer-events: none;
+}
+.lineup-event:not(.check-event):hover::after, .relay-card:hover::after {
+  animation: cardShine 0.7s ease-out;
+}
+@keyframes cardShine {
+  from { transform: translateX(0) skewX(-14deg);    opacity: 1; }
+  to   { transform: translateX(420%) skewX(-14deg); opacity: 0; }
+}
+
+/* ─── Win gauge extras: bubbles in the water + high-win burst ──────────── */
+/* Bubbles get their own clipped layer INSIDE the fill — clipping the fill
+   itself would cut off the wave rows riding above its top edge. */
+.win-bubble-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.gauge-bubble {
+  position: absolute;
+  bottom: -12px;
+  border-radius: 50%;
+  /* Same hollow neon-ring look as the page bubbles, scaled down. */
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--info) 75%, transparent);
+  box-shadow:
+    0 0 5px color-mix(in srgb, var(--info) 40%, transparent),
+    inset 0 0 3px color-mix(in srgb, var(--info) 30%, transparent);
+  opacity: 0;
+  animation: gaugeBubble 4s linear infinite;
+}
+@keyframes gaugeBubble {
+  0%   { transform: translate(0, 0);     opacity: 0; }
+  15%  { opacity: 0.75; }
+  80%  { opacity: 0.5; }
+  100% { transform: translate(8px, -110px); opacity: 0; }
+}
+.gauge-drop {
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: dropBurst 0.8s cubic-bezier(0.16, 0.84, 0.44, 1) forwards;
+}
+@keyframes dropBurst {
+  from { transform: translate(0, 0) scale(1);                    opacity: 0.9; }
+  to   { transform: translate(var(--dx, 0), var(--dy, -40px)) scale(0.35); opacity: 0; }
+}
+.headline-pct.celebrate { animation: celebrate 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes celebrate {
+  30% { transform: translateY(-7px) scale(1.05); }
+}
+
+/* ─── Reduced motion: the whole pack stands down ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  main.page, .scenario-card { animation: none; }
+  .bubble-field, .scroll-lane, .gauge-bubble, .gauge-drop { display: none; }
+  .lineup-event:not(.check-event):hover::after, .relay-card:hover::after { animation: none; }
+  .headline-pct.celebrate { animation: none; }
+  .reveal-pending,
+  .lineup-event.reveal-pending .lane,
+  .relay-card.reveal-pending .relay-legs li { opacity: 1; transform: none; }
+  .win-water-fill { transition: none; }
+  .win-wave-row { animation: none; }
+}
+
+/* ─── Learn page (/how-it-works): long-form article ─────────────────────── */
+.learn-article {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 0 48px;
+}
+.learn-header { text-align: center; margin-bottom: 40px; }
+.learn-header h1 {
+  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
+}
+.learn-lead {
+  color: var(--text-soft);
+  font-size: 1.08rem;
+  line-height: 1.65;
+  max-width: 580px;
+  margin: 0 auto;
+}
+.learn-article section { margin-bottom: 36px; }
+.learn-article h2 {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 1.02rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+.learn-num {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent);
+  font-size: 0.82rem;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.learn-article p {
+  color: var(--text-soft);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.learn-article p b { color: var(--text); }
+
+/* ─── Nav v2: dock-style links, waterline edge ──────────────────────────
+   Late in the file on purpose — overrides the two earlier nav.topnav rules. */
+nav.topnav {
+  padding: 10px 28px;
+  gap: 24px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--panel) 92%, transparent),
+    color-mix(in srgb, var(--panel) 70%, transparent));
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: none;
+  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.6);
+}
+/* Glowing waterline along the bottom edge instead of a flat 1px border. */
+nav.topnav::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 30%, transparent) 15%,
+    color-mix(in srgb, var(--accent) 30%, transparent) 85%,
+    transparent);
+  pointer-events: none;
+}
+nav.topnav .logo { transition: filter 0.2s, opacity 0.2s; }
+nav.topnav .logo:hover {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 40%, transparent));
+}
+/* Links sit in a rounded dock, dead-centered in the bar (the nav is sticky,
+   so the absolute dock positions against it). Logo left, status/actions right. */
+nav.topnav .nav-links {
+  flex: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+}
+/* Right wing: matchup chip + Clear lineup. */
+nav.topnav .nav-side {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px; /* keeps nav height stable when the wing is empty */
+}
+/* Matchup chip: a tiny scoreboard. Orbitron team names around a glowing VS,
+   week badge in the neon-outline style used by the bubbles. */
+nav.topnav .nav-meet {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--text-soft);
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+  transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+}
+nav.topnav .nav-meet:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  border-color: color-mix(in srgb, var(--info) 45%, var(--border));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--info) 18%, transparent);
+}
+nav.topnav .nav-meet-team {
+  max-width: 15ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+nav.topnav .nav-meet-team:first-child { color: var(--accent); }
+nav.topnav .nav-meet-vs {
+  font-size: 0.56rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--info) 90%, transparent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--info) 60%, transparent);
+}
+nav.topnav .nav-meet-week {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: var(--info);
+  border: 1px solid color-mix(in srgb, var(--info) 60%, transparent);
+  box-shadow:
+    inset 0 0 6px color-mix(in srgb, var(--info) 18%, transparent),
+    0 0 8px color-mix(in srgb, var(--info) 18%, transparent);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+/* Clear lineup: same ghost-pill language as the chip; red glow when it means it. */
+nav.topnav .clear-lineup-btn {
+  margin-left: 0; /* .nav-side handles the right alignment */
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  color: var(--text-soft);
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+nav.topnav .clear-lineup-btn:hover {
+  color: var(--win-weak);
+  border-color: color-mix(in srgb, var(--win-weak) 55%, transparent);
+  background: color-mix(in srgb, var(--win-weak) 10%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--win-weak) 22%, transparent);
+}
+nav.topnav .clear-lineup-btn.armed {
+  color: #fff;
+  background: var(--win-weak);
+  border-color: var(--win-weak);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--win-weak) 45%, transparent);
+}
+nav.topnav a {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 999px;
+  color: var(--text-muted);
+}
+nav.topnav a:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--panel-alt) 55%, transparent);
+}
+/* Active highlight: soft glowing pill (the liquid blob glides between tabs). */
+nav.topnav .nav-links.liquid-track .liquid-blob {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+/* Back links: ghost pills in the nav-dock language. The arrow swims left on hover. */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: center;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  text-decoration: none;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.back-link .back-arrow {
+  color: color-mix(in srgb, var(--info) 90%, transparent);
+  transition: transform 0.25s;
+}
+.back-link:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--info) 45%, var(--border));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--info) 15%, transparent);
+}
+.back-link:hover .back-arrow { transform: translateX(-3px); }
+
+/* Primary buttons: still the solid-ivory brand CTA, now in the same Orbitron
+   pill shape as everything else. Scoped to .btn + the two setup CTAs (a bare
+   `button` selector would also hit custom controls like combo triggers). */
+.btn:not(.secondary), #setupBtn, #runBtn {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-radius: 999px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 0 14px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.btn:not(.secondary):hover, #setupBtn:hover, #runBtn:hover {
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 24px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.btn.btn-large {
+  font-size: 0.95rem;
+  padding: 18px 44px;
+}
+
+/* Secondary + ghost buttons, site-wide: same pill language as the nav.
+   Primary buttons stay solid ivory (the brand CTA) — these are the quiet ones. */
+button.secondary, .btn.secondary {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  color: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 8%, transparent);
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+button.secondary:hover, .btn.secondary:hover {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 90%, transparent);
+  color: var(--accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+button.ghost {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-alt) 50%, transparent);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+}
+button.ghost:hover {
+  background: color-mix(in srgb, var(--panel-alt) 50%, transparent);
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--info) 60%, var(--border));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--info) 22%, transparent);
+}
+/* Native file-picker button inside upload inputs — the last stock-looking control.
+   The :hover rule must re-state background: an earlier theme rule turns it solid
+   ivory on hover, which reads as a white flash. */
+input[type="file"]::file-selector-button {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  margin-right: 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+input[type="file"]::file-selector-button:hover {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 80%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* Narrow screens: the chip sheds your own team first (you know who you are),
+   then disappears, then the dock falls back into flow so nothing overlaps. */
+@media (max-width: 1240px) {
+  nav.topnav .nav-meet-team:first-child { display: none; }
+}
+@media (max-width: 1100px) {
+  nav.topnav .nav-meet { display: none; }
+}
+@media (max-width: 880px) {
+  nav.topnav .nav-links { position: static; transform: none; }
+}
+@media (max-width: 720px) {
+  nav.topnav { padding: 8px 14px; gap: 14px; }
+}

@@ -1,0 +1,31 @@
+# Environment
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+
+# Runtime state (regenerated every run)
+your_lineup.json
+opp_lineup.json
+lineup_snapshot.json
+results.json
+
+# YOUR league's data — never commit real rosters/times (they identify minors).
+# The shipped nvsl_meet_history.json / nvsl_divisions_by_year.json are the
+# SYNTHETIC demo league (tools/make_demo_league.py) and are tracked; anything
+# you scrape or upload for a real league lands in the paths below and stays out.
+time_trials/
+manual_times/
+roster/
+roster_excludes/
+meet_prefs/
+leaders_cache*.json
+team_codes.json
+shb_absences.json
+week_absences.json
+top3_absences.json
+data/
+
+# Trained models (train your own: python3 train_coach_predictor.py)
+*.pkl

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}How it works{% endblock %}
+
+{% block content %}
+
+<article class="learn-article">
+
+<a href="/" class="back-link"><span class="back-arrow">←</span> Home</a>
+
+<header class="learn-header">
+  <h1>HOW LANE LAB WORKS</h1>
+  <p class="learn-lead">
+    What happens between hitting <b>Run Optimizer</b> and getting a lineup:
+    the data, the opponent model, the simulation, and the search.
+  </p>
+</header>
+
+<section>
+  <h2><span class="learn-num">1</span>The data</h2>
+  <p>
+    Everything starts with five seasons of NVSL results (2021–2025) collected
+    from mynvsl.com: every swimmer's time in every event, plus each team's
+    full lineup history. You can add your team's SwimTopia roster (the
+    official current-season roster) and a HY-TEK time-trial PDF, which covers
+    new swimmers without race history.
+  </p>
+</section>
+
+<section>
+  <h2><span class="learn-num">2</span>Swimmer profiles</h2>
+  <p>
+    For every swimmer and stroke, the app builds a profile: a typical time,
+    and how much that time varies from race to race. Consistency differs
+    widely between swimmers, and the optimizer uses both numbers.
+  </p>
+  <p>
+    Returning swimmers who haven't raced yet this season get estimated times
+    from last year's results: the app takes where they ranked relative to the
+    field last year and carries that standing forward, adjusted for being a
+    year older. You review this list during setup and can drop anyone who
+    left the team.
+  </p>
+</section>
+
+<section>
+  <h2><span class="learn-num">3</span>Predicting the opponent</h2>
+  <p>
+    A prediction model trained on thousands of real NVSL lineup decisions
+    estimates what the other coach will run. It uses their roster, each
+    swimmer's results, and that coach's historical patterns to pick the
+    lineup they're most likely to swim.
+  </p>
+  <p>
+    The model predicts the opponent's exact lineup <b>53%</b> of the time,
+    compared with 38% for the simpler approach it replaced. The scenario mix
+    in section 5 covers the remaining uncertainty.
+  </p>
+</section>
+
+<section>
+  <h2><span class="learn-num">4</span>Simulating a meet</h2>
+  <p>
+    Lineups are compared by simulation. During the search, each candidate
+    lineup is scored over <b>3,000 simulated meets</b>; the final numbers
+    shown on the results page use <b>10,000</b>. In each simulated meet,
+    every swimmer gets a race-day time drawn from their profile (typical
+    speed, plus or minus their usual variation), every event is scored 5-3-1
+    per NVSL rules, relays included, and the points are totaled.
+  </p>
+  <p>
+    Every candidate lineup is tested against the <i>same</i> pre-drawn sets
+    of race-day variation (a technique called common random numbers), so a
+    half-point difference between two lineups is a real difference rather
+    than simulation noise. Repeated event matchups are cached, which makes
+    the search roughly ten times faster.
+  </p>
+</section>
+
+<section>
+  <h2><span class="learn-num">5</span>Hedging the bet</h2>
+  <p>
+    Optimizing against the single predicted lineup would be fragile, so every
+    candidate is scored against a weighted mix of scenarios: the opponent's
+    <b>predicted lineup (70%)</b>, their best <b>counter to your last-week
+    lineup (15%)</b>, and their best <b>counter to your most obvious lineup
+    (15%)</b>.
+  </p>
+  <p>
+    The weights adapt to the opponent, based on five years of their lineup
+    behavior. Highly consistent coaches shift weight toward the predicted
+    lineup, up to 85%. Coaches who reshuffle frequently shift weight toward
+    the counter scenarios, up to 25% each. A lineup has to score well across
+    the whole mix, not just the most likely case.
+  </p>
+</section>
+
+<section>
+  <h2><span class="learn-num">6</span>The search</h2>
+  <p>
+    A legal lineup follows league rules: at most <b>2 individual events per
+    swimmer</b>, at most <b>3 swimmers per event</b>, and age eligibility for
+    every entry (swimming up into an older group is allowed). That leaves far
+    more possibilities than can be tried exhaustively.
+  </p>
+  <p>
+    The optimizer starts from the best "blind" lineup and improves it by
+    local search: try a swap, re-simulate, keep the change if it raises the
+    expected win probability across the scenario mix, and repeat until no
+    swap improves the result. This search is what runs during the 60–90
+    second optimize.
+  </p>
+</section>
+
+<section>
+  <h2><span class="learn-num">7</span>Keeping the number honest</h2>
+  <p>
+    Raw simulation output is overconfident, because the lineup was optimized
+    inside the model's own view of the world. The headline win percentage is
+    therefore <b>calibrated</b>: compared against how past predictions
+    actually turned out, and adjusted until the stated probabilities match
+    real outcomes.
+  </p>
+  <p>
+    Week 1 is the exception. With no current-season races, lineup prediction
+    accuracy drops to roughly a third, so Week 1 uses its own calibrated
+    estimate and is labeled as a rough early-season guide rather than a
+    confident forecast.
+  </p>
+</section>
+
+<section>
+  <h2><span class="learn-num">8</span>What it can't know</h2>
+  <p>
+    The model has no knowledge of absences (you mark those in setup),
+    swimmers with no recorded races (partially covered by time-trial
+    uploads), disqualifications, or off-season roster changes on other teams.
+    The Check page exists for applying information the model lacks.
+  </p>
+</section>
+
+<div class="hero-cta-end">
+  <a href="/setup" class="btn">Build a lineup →</a>
+</div>
+
+</article>
+
+{% endblock %}

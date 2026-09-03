@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Lineup{% endblock %}
+
+{% block content %}
+
+{# Hydration shim: ship the server-side payload (or `null`) into a global so JS
+   can either render it directly or fall back to localStorage. #}
+<script>
+  window.LINEUP_DATA = {{ payload | tojson | safe if payload else 'null' }};
+</script>
+
+{% if payload %}
+  {# Server-side render of the page chrome. JS will swap content on toggle. #}
+  <div id="lineupRoot" data-server-rendered="true">
+    {% include "_lineup_body.html" %}
+  </div>
+{% else %}
+  {# No server-side data — try localStorage; if empty, show the empty CTA. #}
+  <div id="lineupRoot" data-server-rendered="false">
+    <div class="empty-state" id="lineupEmpty">
+      <h1>No lineup loaded</h1>
+      <p>Build and optimize this week's lineup, and the results will show up here.</p>
+      <a href="/setup" class="btn">Start a Lineup</a>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Setup{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap">
+  <h1 style="margin-bottom:0">Set up this week's lineup</h1>
+  <a href="/" class="back-link"><span class="back-arrow">←</span> Home</a>
+</div>
+<p class="note">Pick the two teams and the week, then we'll load the data and double-check the rosters before building your lineup.</p>
+
+<div class="stepper">
+
+<!-- ─── Step 1: Teams + Week ──────────────────────────────────────────── -->
+<div class="step-row" id="step-setup" data-status="active">
+  <div class="step-marker"><span class="step-num" data-step="1"></span></div>
+  <div class="card">
+  <h2 style="margin-top:0">Choose teams and week</h2>
+  <div class="controls">
+    <div class="field">
+      <label for="yourTeam">Your team</label>
+      <select id="yourTeam" data-combo data-placeholder="Select your team" onchange="resetSetup()">{{ team_options(cfg.get("your_team", "")) | safe }}</select>
+    </div>
+    <div class="field">
+      <label for="oppTeam">Opponent</label>
+      <select id="oppTeam" data-combo data-placeholder="Select opponent" onchange="resetSetup()">{{ team_options(cfg.get("opp_team", "")) | safe }}</select>
+    </div>
+    <div class="field">
+      <label for="year">Year</label>
+      <select id="year" data-combo data-no-search data-placeholder="Select year" onchange="resetSetup()">
+        <option value="2026" {% if year == 2026 %}selected{% endif %}>2026</option>
+        <option value="2025" {% if year == 2025 %}selected{% endif %}>2025</option>
+        <option value="2024" {% if year == 2024 %}selected{% endif %}>2024</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="week">This week</label>
+      <select id="week" data-combo data-no-search data-placeholder="Select week" onchange="resetSetup()">{{ week_options(year, week) | safe }}</select>
+    </div>
+    <div class="field">
+      <label for="homeAway">Home / away</label>
+      <select id="homeAway" data-combo data-no-search data-placeholder="Home or away">
+        <option value="home" selected>Home (we get lanes 1/3/5)</option>
+        <option value="away">Away (we get lanes 2/4/6)</option>
+      </select>
+    </div>
+    <button id="teamsNextBtn" class="secondary" onclick="proceedFromTeams()">Next →</button>
+  </div>
+  <div class="status" id="teamsMsg"></div>
+  </div>
+</div>
+
+<!-- ─── Optimizer settings — a gear "step" (below step 1) ─────────────── -->
+<div class="step-row" id="step-advanced" data-status="active">
+  <div class="step-marker">
+    <span class="step-num step-num-gear" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.62.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.24 8.48a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.13.22.39.3.59.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.2.08.46 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
+    </span>
+  </div>
+  <details class="settings-panel">
+    <summary>
+      <span class="settings-summary-inner">
+        <span>Optimizer settings</span>
+        <span class="settings-chevron" aria-hidden="true"></span>
+      </span>
+    </summary>
+    <div class="details-body">
+      <label class="toggle-row" style="margin-bottom:12px">
+        <input type="checkbox" id="useImputation" onchange="_queuePrefsSave()">
+        <span>Estimate times from last year for swimmers who haven't raced yet <span class="note">(remembers your last choice)</span></span>
+      </label>
+      <label class="toggle-row" style="margin-bottom:12px">
+        <input type="checkbox" id="useOppFingerprint" {% if cfg.get("use_opp_fingerprint", True) %}checked{% endif %}>
+        <span>Adapt to this opponent's coaching habits <span class="note">(based on 5 years of their lineups)</span></span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="swimupOnlyIfScoring" checked>
+        <span>Only swim a younger swimmer up if they can place <span class="note">(otherwise fill that slot with a swimmer their own age)</span></span>
+      </label>
+    </div>
+  </details>
+</div>
+
+<!-- ─── Step 2: Add team data (optional) ──────────────────────────────── -->
+<div class="step-row" id="step-upload" data-status="locked">
+  <div class="step-marker"><span class="step-num" data-step="2"></span></div>
+  <div class="card">
+  <h2 style="margin-top:0">Add team data <span class="note" style="font-weight:400">(optional)</span></h2>
+  <p class="note">Add extra data about your team if you have it. No extra files? Just hit <b>Load Data</b>.</p>
+
+  <h3 style="margin-top:14px">Time-trial / ladder PDF</h3>
+  <p class="note">A HY-TEK "Individual Top Times" PDF. Adds time-trial times and helps make sure no one's missing from your roster.</p>
+  <div id="ladderRec" class="ladder-rec"></div>
+  <div id="ladderSaved" class="note" style="margin:6px 0 0"></div>
+  <div class="controls" style="margin-top:8px">
+    <div class="field">
+      <label for="ladderFile">PDF for your team</label>
+      <input type="file" id="ladderFile" accept="application/pdf">
+    </div>
+    <button id="ladderBtn" class="secondary" onclick="doUploadLadder()">Upload →</button>
+  </div>
+  <div class="status" id="ladderMsg"></div>
+
+  <div class="controls" style="margin-top:18px">
+    <button id="setupBtn" onclick="doSetup()">Load Data →</button>
+  </div>
+  <div class="status" id="setupMsg"></div>
+  </div>
+</div>
+
+<!-- ─── Step 3: Returning swimmers (imputation review) ─────────────────── -->
+<div class="step-row" id="step-impute" data-status="locked">
+  <div class="step-marker"><span class="step-num" data-step="3"></span></div>
+  <div class="card">
+
+  <!-- Ambiguous-name confirmation (only shown when there are flags or auto-resolves) -->
+  <div id="nameFlagBlock" style="display:none;margin-bottom:20px">
+    <h2 style="margin-top:0" id="nameFlagHdr">Is this the same swimmer?</h2>
+    <p class="note" id="nameFlagIntro">A few names on your ladder look like they <i>might</i> be someone from last year's results — or might just be a sibling with the same last name. Pick one for each. <b>We remember your answer permanently</b>, so you'll only ever see each pair once.</p>
+    <div id="nameFlagArea"></div>
+    <div class="controls" style="margin-top:14px" id="nameFlagControls">
+      <button id="nameFlagSaveBtn" class="secondary" onclick="saveNameFlags()">Save &amp; apply →</button>
+    </div>
+    <div class="status" id="nameFlagMsg"></div>
+    <hr style="margin:20px 0 4px;border:none;border-top:1px solid var(--border,#3a3a3a)">
+  </div>
+
+  <h2 style="margin-top:0">Returning swimmers</h2>
+  <p class="note">These swimmers raced for the team last year but haven't raced yet this season, so the app estimates their times from last year's results. <b>Uncheck anyone who left the team for good.</b> (For someone who's just out this week, leave them checked here and mark them absent on the next step.) Your choices are remembered for next time.</p>
+  <div style="margin-bottom:14px">
+    <h3 style="margin-bottom:6px"><span id="impYourTitle">Your team</span></h3>
+    <div id="impYourArea"></div>
+  </div>
+
+  <div class="manual-times">
+    <h3 style="margin-bottom:4px">Add a time <span class="note">(for a DQ'd or missing swim)</span></h3>
+    <p class="note" style="margin:0 0 10px">Got a swimmer with a real time the app doesn't know — usually a race they were DQ'd in? Enter it here and they'll be seeded on it like any real swim.</p>
+    <div class="manual-time-form">
+      <input type="text" list="rosterDatalist" id="mtName" placeholder="Swimmer" autocomplete="off">
+      <datalist id="rosterDatalist"></datalist>
+      <select id="mtEvent" data-combo data-placeholder="Event…"><option value="">Event…</option></select>
+      <input type="text" id="mtTime" placeholder="Time · 33.5" autocomplete="off">
+      <button type="button" class="secondary" onclick="addManualTime()">Add time</button>
+    </div>
+    <div id="mtStatus" class="manual-time-status note"></div>
+    <div id="mtList" class="manual-time-list"></div>
+  </div>
+
+  <div class="controls" style="margin-top:16px">
+    <button class="secondary" onclick="advanceStep('step-impute','step-roster')">Next →</button>
+  </div>
+  </div>
+</div>
+
+<!-- ─── Step 4: Availability (your + opponent) ────────────────────────── -->
+<div class="step-row" id="step-roster" data-status="locked">
+  <div class="step-marker"><span class="step-num" data-step="4"></span></div>
+  <div class="card">
+  <h2 style="margin-top:0">Mark availability</h2>
+  <p class="note">Everyone starts as available — <b>uncheck</b> anyone missing this week's meet and they'll be left out of the lineup. Returning swimmers you kept above are listed here too, so an estimated swimmer who won't show can be marked absent. Saved per team and week.</p>
+  <div class="avail-cols">
+    <div class="avail-col">
+      <h3 style="margin-bottom:6px"><span id="rosterYourTitle">Your team</span></h3>
+      <div id="rosterArea"></div>
+    </div>
+    <div class="avail-col">
+      <h3 style="margin-bottom:6px"><span id="rosterOppTitle">Opponent</span></h3>
+      <div id="oppRosterArea"></div>
+    </div>
+  </div>
+  <div class="controls" style="margin-top:16px">
+    <button class="secondary" onclick="advanceStep('step-roster','step-run')">Next →</button>
+  </div>
+  </div>
+</div>
+
+<!-- ─── Step 5: Run ──────────────────────────────────────────────────── -->
+<div class="step-row" id="step-run" data-status="locked">
+  <div class="step-marker"><span class="step-num" data-step="5"></span></div>
+  <div class="card">
+  <h2 style="margin-top:0">Run the optimizer</h2>
+  <p class="note">Builds the lineup with the best chance of winning, whatever the other team runs. Takes about 60–90 seconds.</p>
+  <div class="controls" style="margin-top:8px">
+    <button id="runBtn" onclick="doRun()" disabled>Run Optimizer →</button>
+  </div>
+  <div class="status" id="runMsg"></div>
+  </div>
+</div>
+
+</div><!-- /.stepper -->
+
+<!-- Full-page loading overlay; hidden by default, .visible flips it on -->
+<div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+  <div class="loading-card">
+    <svg class="logo-svg" viewBox="240 140 480 290" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="m548.78 190.76l39.40 0l0 62.58l-39.40 0z"/>
+      <path d="m495.32 228.01l39.40 0l0 25.32l-39.40 0z"/>
+      <path d="m317.15 282.70l152.44 0l0 12.44l-152.44 0z"/>
+      <path d="m507.78 257.97c-0.81 20.59 -18.10 37.15 -38.80 37.17l0.32 -12.45c13.76 -0.20 25.30 -11.23 26.02 -24.88z"/>
+      <path d="m532.37 291.76c0.35 22.77 -20.02 43.10 -47.15 47.07l-1.83 -13.22c20.19 -2.99 35.54 -17.22 35.65 -33.04z"/>
+      <path d="m531.14 338.80c-0.89 22.89 -20.19 41.28 -45.86 43.70l-2.03 -12.21c20.04 -1.49 35.08 -15.15 35.56 -32.31z"/>
+      <g class="notch-track lane1-n1"><rect class="notch-dot" x="-11" y="-12" width="22" height="24" rx="4"/></g>
+      <g class="notch-track lane1-n2"><rect class="notch-dot" x="-11" y="-12" width="22" height="24" rx="4"/></g>
+      <path d="m317.36 325.48l167.91 0l0 13.35l-167.91 0z"/>
+      <g class="notch-track lane2-n1"><rect class="notch-dot" x="-11" y="-12" width="22" height="24" rx="4"/></g>
+      <g class="notch-track lane2-n2"><rect class="notch-dot" x="-11" y="-12" width="22" height="24" rx="4"/></g>
+      <path d="m317.36 370.08l167.91 0l0 12.44l-167.91 0z"/>
+      <g class="notch-track lane3-n1"><rect class="notch-dot" x="-11" y="-12" width="22" height="24" rx="4"/></g>
+      <g class="notch-track lane3-n2"><rect class="notch-dot" x="-11" y="-12" width="22" height="24" rx="4"/></g>
+      <path d="m626.13 252.63l15.62 0l0 85.70l-15.62 0z"/>
+      <path d="m602.31 159.54l39.40 0l0 93.80l-39.40 0z"/>
+      <path d="m518.57 264.48l40.00 0l0 118.14l-40.00 0z"/>
+      <path d="m572.35 264.49l40.00 0l0 118.14l-40.00 0z"/>
+      <path d="m495.32 252.63l12.44 0l0 5.39l-12.44 0z"/>
+    </svg>
+    <div class="loading-title">Optimizing lineup</div>
+    <div class="loading-message" id="loadingMessage">Warming up the lane lines…</div>
+    <div class="loading-sub">This usually takes 60–90 seconds. Hold tight.</div>
+  </div>
+</div>
+
+{% endblock %}
+

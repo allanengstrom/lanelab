@@ -1,0 +1,15 @@
+{
+ "_method": "theory2: displayed = pred_coach + reanchor[week] - b*(division - divmean)",
+ "_pred_coach": "model score of the COACH-PREDICTED our lineup (_predict_opp_lineup_or_fallback on our team) + relay_exp_pts",
+ "divmean": 8.9139,
+ "div_slope_b": -0.3741,
+ "reanchor": {
+  "1": -9.8238,
+  "2": -5.5018,
+  "3": -2.5278,
+  "4": -0.736,
+  "5": -0.2769
+ },
+ "target_displayed_bias": 7.0,
+ "_built": "full-league lever_theory2_full.jsonl, 488 sides; 5-fold CV stable (calib_robust.py)"
+}

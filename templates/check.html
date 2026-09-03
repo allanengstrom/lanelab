@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Check{% endblock %}
+
+{% block content %}
+
+{% if not payload %}
+  <div class="empty-state">
+    <h1>No lineup to check</h1>
+    <p>Optimize a lineup first, then come back here to tweak and compare it.</p>
+    <a href="/setup" class="btn">Start a Lineup</a>
+  </div>
+{% else %}
+
+<div class="lineup-title-row">
+  <h1>Lineup check</h1>
+  <span class="vs" title="{{ payload.your_team }} vs {{ payload.opp_team }}">{{ payload.your_team | team_code }} vs {{ payload.opp_team | team_code }}</span>
+  <a href="/lineup" class="back-link"><span class="back-arrow">←</span> Results</a>
+</div>
+<p class="note">Pick an age group (and team) to focus on, tweak the swimmers, and check it against ours. Conflicts like double-bookings are flagged as you go.</p>
+
+{# Bring-your-own lineup: upload an Excel sheet to load into the editor. #}
+<div class="check-upload">
+  <div>
+    <h3 style="margin:0 0 4px">Have your own lineup?</h3>
+    <p class="note" style="margin:0">Upload an Excel sheet of your lineup to load it into the editor and compare against the optimal.</p>
+  </div>
+  <div class="check-upload-row">
+    <input type="file" id="lineupXlsxFile" accept=".xlsx,.xls">
+    <button class="secondary" id="lineupXlsxBtn" onclick="uploadLineupXlsx()">Load from Excel →</button>
+  </div>
+  <div class="backend-hint" id="lineupXlsxHint" style="display:none"></div>
+</div>
+
+{# Compare bar: real "Optimal" numbers vs an "Yours" panel that needs backend scoring. #}
+<div class="check-compare">
+  <div class="check-cmp-cell">
+    <span class="cmp-label">Optimal <span class="cmp-scope" id="cmpScope"></span></span>
+    <span class="cmp-pts" id="optimalPts">— pts</span>
+  </div>
+  <div class="check-cmp-arrow">→</div>
+  <div class="check-cmp-cell" id="yoursCell">
+    <span class="cmp-label">Yours</span>
+    <span class="cmp-pts" id="yoursPts">— pts</span>
+    <span class="cmp-delta" id="yoursDelta"></span>
+  </div>
+  <div class="check-actions">
+    <button class="secondary" id="checkBtn" onclick="runCheckScore()">Check lineup</button>
+    <button id="promoteBtn" onclick="promoteLineup()" style="display:none">Make this the optimal</button>
+    <button class="ghost" id="resetBtn" onclick="resetCheck()">Reset to optimal</button>
+  </div>
+</div>
+<div class="check-meetwin" id="meetWin"></div>
+<p class="note" style="margin-bottom:14px">The points above cover just the events shown. “Check lineup” also replays the <b>whole meet</b> to get your new win %.</p>
+<script>
+  window.CHECK_BASE = { win: {{ "%.4f"|format(payload.headline_wp) if payload.headline_wp is not none else 'null' }} };
+</script>
+
+{# Live, client-side validity summary. #}
+<div id="checkIssues" class="check-issues"></div>
+
+{% if not payload.elig_ready %}
+  <div class="backend-hint" style="margin-bottom:14px">
+    Dropdowns currently show every swimmer on each team because this lineup was loaded from a save. <b>Re-run the optimizer</b> to narrow each event down to just the swimmers allowed in it.
+  </div>
+{% endif %}
+
+{# Scope the editor to an age group / team (everything stays scored whole-meet). #}
+<div class="check-filter">
+  <label for="ageFilter">Show</label>
+  <select id="ageFilter" data-combo data-no-search onchange="filterCheckGrid()">
+    <option value="all">All age groups</option>
+    <option value="8U">8U</option>
+    <option value="9-10">9-10</option>
+    <option value="11-12">11-12</option>
+    <option value="13-14">13-14</option>
+    <option value="15-18">15-18</option>
+  </select>
+  <select id="genderFilter" data-combo data-no-search onchange="filterCheckGrid()">
+    <option value="all">Boys &amp; Girls</option>
+    <option value="Boys">Boys</option>
+    <option value="Girls">Girls</option>
+  </select>
+</div>
+
+{# Editable grid: boys left, girls right, by age then stroke (free → back → breast → fly). #}
+<div class="lineup-events two-col" id="checkGrid">
+  {% set age_order    = ['8U', '9-10', '11-12', '13-14', '15-18'] %}
+  {% set stroke_order = ['free', 'back', 'breast', 'fly'] %}
+  {% for col_gen in ['Boys', 'Girls'] %}
+    <div class="events-col" data-gender="{{ col_gen }}">
+      <h3 class="events-col-title">{{ col_gen }}</h3>
+      {% set pool = payload.boys_pool if col_gen == 'Boys' else payload.girls_pool %}
+      {% for age in age_order %}
+        {% for stroke in stroke_order %}
+          {% for ce in payload.check_events
+                if ce.event.split()[1] == col_gen
+                and ce.event.split()[0] == age
+                and ce.event.split('-')[-1] == stroke %}
+            {% set ev_dist = ce.event.split()[2].split('-')[0] %}
+            <section class="lineup-event check-event" data-age="{{ age }}" data-optpts="{{ '%.4f'|format(ce.mc_pts or 0) }}">
+              <header class="event-header">
+                <div class="event-name">
+                  <span class="event-age">{{ age }}</span>
+                  <span class="event-gen">{{ col_gen }}</span>
+                  <span class="event-dist">{{ ev_dist }}m</span>
+                  <span class="event-stroke">{{ stroke|title }}</span>
+                </div>
+                {% if ce.win_pct %}
+                  {% set ec = "win100" if ce.win_pct >= 75 else ("win75" if ce.win_pct >= 55 else ("win50" if ce.win_pct >= 35 else "win25")) %}
+                  <span class="event-winpct {{ ec }}">{{ "%.0f"|format(ce.win_pct) }}% win</span>
+                {% endif %}
+              </header>
+              {% set opts = ce.eligible if ce.eligible else pool %}
+              <div class="check-slots">
+                {% for sw in ce.swimmers %}
+                  <select class="swap-select" data-combo data-placeholder="— (empty)" data-event="{{ ce.event }}" data-orig="{{ sw }}">
+                    {# Always keep the entered swimmer as a valid option, even with
+                       no time for this stroke — else the select falls back to its
+                       first option and duplicates that swimmer across slots. #}
+                    {% if sw and sw not in opts %}
+                      <option value="{{ sw }}" selected>{{ sw }}{% if sw in ce.no_time %} — imputed (no seed time){% endif %}</option>
+                    {% endif %}
+                    {% for p in opts %}
+                      <option value="{{ p }}" {% if p == sw %}selected{% endif %}>{{ p }}{% if p in ce.no_time %} — imputed (no seed time){% endif %}</option>
+                    {% endfor %}
+                    <option value="" {% if not sw %}selected{% endif %}>— (empty)</option>
+                  </select>
+                {% endfor %}
+              </div>
+            </section>
+          {% endfor %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>
+
+<p class="note" style="margin-top:14px">Each dropdown lists every swimmer eligible for that event (right age and gender, legal swim-ups included), fastest first. Swimmers with no recorded time for the stroke appear at the bottom — you can still enter them, but they won't be scored until they have a time.</p>
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,69 @@
+{
+ "1": {
+  "total_adj": 44.18,
+  "mean_va": 51.18,
+  "blend_w": 0.3,
+  "reanchor": -11.347
+ },
+ "2": {
+  "total_adj": 31.04,
+  "mean_va": 38.04,
+  "blend_w": 0.45,
+  "reanchor": -1.595
+ },
+ "3": {
+  "total_adj": 29.27,
+  "mean_va": 36.27,
+  "blend_w": 0.45,
+  "reanchor": 2.917
+ },
+ "4": {
+  "total_adj": 30.29,
+  "mean_va": 37.29,
+  "blend_w": 0.45,
+  "reanchor": 2.645
+ },
+ "5": {
+  "total_adj": 25.67,
+  "mean_va": 32.67,
+  "blend_w": 0.45,
+  "reanchor": 2.209
+ },
+ "w1": {
+  "b0": -0.7169,
+  "b1": 0.01114
+ },
+ "w25": {
+  "b0": -0.6762,
+  "b1": 0.01657
+ },
+ "_meta": {
+  "source": "sweep_v5a.jsonl (data-repaired, relay0.5+events+Bmeet-v5a)",
+  "built": "2026-06-13",
+  "sides": 488
+ },
+ "_strength_split": {
+  "enabled": true,
+  "note": "W1=2024 mean score, W2-5=prior-2025-week mean; split 420*sa/(sa+sb)+7, blend_w, then +reanchor",
+  "built": "2026-06-15"
+ },
+ "_va_fit": {
+  "b0": 98.68,
+  "b1": -66.667,
+  "note": "VA_est = b0 + b1*participation (prior-yr fielded-swims/120); replaces flat total_adj"
+ },
+ "_participation_aware": {
+  "enabled": true,
+  "built": "2026-06-15"
+ },
+ "_winprob_sigma_margin": 50,
+ "_winprob_meta": {
+  "form": "origin-forced probit Phi(displayed_margin / sigma)",
+  "sigma_mle": 49.06,
+  "sigma_shipped": 50,
+  "note": "Win % reads the post-conserve displayed margin (mstats['margin']). Validated on 488 bias-corrected backtest sides: global sigma wins (Brier 0.1501), intercept fits to ~0 (LRT p=0.80), per-week overfits (W1 sigma unidentified). Rounded 49.06->50 (statistically identical, slightly conservative given the de-mean proxy understates per-team noise).",
+  "built": "2026-06-17"
+ },
+ "_league_reanchor": 10.25,
+ "_league_reanchor_note": "fitted 2026-08-28 on 488-side 2025 backtest (leakage-fixed, forfeit-discount on); 2-fold CV residual +/-1.2; see docs/AUG_2026_RECALIBRATION.md"
+}

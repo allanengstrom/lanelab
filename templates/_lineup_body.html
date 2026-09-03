@@ -1,0 +1,268 @@
+{# _lineup_body.html — the actual rendered content. Used by lineup.html and also
+   re-rendered client-side from the same data shape via a JS template. #}
+
+<div class="lineup-header">
+  <div class="lineup-title-row">
+    <h1 title="{{ payload.your_team }} vs {{ payload.opp_team }}">{{ payload.your_team | team_code }} <span class="vs">vs</span> {{ payload.opp_team | team_code }}</h1>
+    <span class="lineup-meta">
+      {{ payload.week_label }}
+      <span class="dot">·</span>
+      {{ "Home" if payload.your_is_home else "Away" }}
+    </span>
+    <div class="lineup-header-actions">
+      <a href="/check" class="btn secondary lineup-action">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3l4 4-4 4"/><path d="M20 7H4"/><path d="M8 21l-4-4 4-4"/><path d="M4 17h16"/></svg>
+        Check / tweak
+      </a>
+      <button class="secondary lineup-action" id="exportXlsxBtn" onclick="exportLineupXlsx()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
+        Export to Excel
+      </button>
+    </div>
+  </div>
+  <div class="backend-hint" id="exportHint" style="display:none; margin-top:8px">
+    Backend needed: <code>GET /api/export_lineup.xlsx</code> — generate the .xlsx from the cached lineup and stream it as a download.
+  </div>
+
+  {% if payload.headline_wp is not none %}
+    {% set wp = payload.headline_wp %}
+    {% set wp_cls = "pct-easy" if wp >= 75 else ("pct-moderate" if wp >= 55 else ("pct-hard" if wp >= 35 else "pct-extreme")) %}
+    <div class="lineup-headline">
+      <div class="headline-pct {{ wp_cls }}" id="headlinePct"
+           data-wp-predicted="{{ "%.1f"|format(wp) }}"
+           {% if payload.headline_wp_lastweek is not none %}data-wp-lastweek="{{ "%.1f"|format(payload.headline_wp_lastweek) }}"{% endif %}
+           data-countup="{{ "%.1f"|format(wp) }}" data-suffix="%">{{ "%.1f"|format(wp) }}%</div>
+      <div class="headline-label">{{ payload.headline_label }}</div>
+    </div>
+  {% endif %}
+
+  <div class="lineup-totals">
+    <div class="total-cell"><span>Individual</span><strong>{{ "%.1f"|format(payload.mc_total) }}</strong></div>
+    {% if payload.relay_exp_pts is not none %}
+      <div class="total-cell"><span>Relay</span><strong>{{ "%.1f"|format(payload.relay_exp_pts) }}</strong></div>
+    {% endif %}
+    <div class="total-cell"><span>Total</span><strong>{{ "%.1f"|format(payload.mc_total + (payload.relay_exp_pts or 0)) }}</strong></div>
+    {% if payload.our_median is not none and payload.opp_median is not none %}
+      <div class="total-cell"><span>Median (us – them)</span><strong id="medianCell"
+           data-our="{{ "%.0f"|format(payload.our_median) }}"
+           data-opp-predicted="{{ "%.0f"|format(payload.opp_median) }}"
+           {% if payload.opp_median_lastweek is not none %}data-opp-lastweek="{{ "%.0f"|format(payload.opp_median_lastweek) }}"{% endif %}>{{ "%.0f"|format(payload.our_median) }} – {{ "%.0f"|format(payload.opp_median) }}</strong></div>
+    {% endif %}
+  </div>
+
+  {% if payload.scenarios %}
+    <div class="scenarios-section">
+      <div class="scenarios-title">Win probability by scenario</div>
+      <div class="scenario-pills"
+           data-liquid data-liquid-static="true"
+           data-liquid-item=".scenario-pill" data-liquid-active=".scenario-pill.active">
+        {% for sc in payload.scenarios %}
+          <button class="scenario-pill {% if loop.first %}active{% endif %}" type="button"
+                  data-scenario="{{ loop.index0 }}">
+            {{ sc.label | replace('Their ', '') | replace(' lineup', '') | replace(' to us', '') | title }}
+          </button>
+        {% endfor %}
+      </div>
+      <div class="scenario-panels">
+        {% for sc in payload.scenarios %}
+          {% set wp = sc.win_prob * 100 %}
+          {% set wc = "win100" if wp >= 75 else ("win75" if wp >= 55 else ("win50" if wp >= 35 else "win25")) %}
+          <div class="scenario-card {% if not loop.first %}scenario-card--hidden{% endif %}" data-scenario="{{ loop.index0 }}">
+            <div class="scenario-header">
+              <span class="scenario-label">{{ sc.label }}</span>
+              <span class="scenario-winpct {{ wc }}">{{ "%.1f"|format(wp) }}%</span>
+            </div>
+            <div class="scenario-detail">
+              <span class="scenario-desc">{{ sc.desc }}</span>
+              <span class="scenario-medians">{{ "%.0f"|format(sc.our_median) }} – {{ "%.0f"|format(sc.opp_median) }} median pts</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="opp-toggle-row">
+    <div class="opp-toggle"
+         data-liquid data-liquid-static="true"
+         data-liquid-item=".opp-mode" data-liquid-active=".opp-mode.active">
+      <button class="opp-mode active" type="button" data-mode="predicted">Predicted</button>
+      <button class="opp-mode" type="button" data-mode="lastweek"
+              {% if not payload.has_lastweek_opp %}disabled title="No prior-week data yet"{% endif %}>
+        Last week (actual)
+      </button>
+    </div>
+  </div>
+</div>
+
+{# One event card. Defined as a macro so the gender columns below can render it
+   in an explicit (age → stroke) order without duplicating the markup. #}
+{% macro render_event(ev) %}
+  {% set parts = ev.event.split() %}
+  {% set ev_age   = parts[0] if parts|length > 0 else ev.event %}
+  {% set ev_gen   = parts[1] if parts|length > 1 else "" %}
+  {% set ev_stroke_raw = parts[2] if parts|length > 2 else "" %}
+  {% set ev_dist  = ev_stroke_raw.split('-')[0] if '-' in ev_stroke_raw else "" %}
+  {% set ev_strk  = ev_stroke_raw.split('-')[1] if '-' in ev_stroke_raw else ev_stroke_raw %}
+  <section class="lineup-event">
+    <header class="event-header">
+      <div class="event-name">
+        <span class="event-age">{{ ev_age }}</span>
+        <span class="event-gen">{{ ev_gen }}</span>
+        <span class="event-dist">{{ ev_dist }}m</span>
+        <span class="event-stroke">{{ ev_strk|title }}</span>
+      </div>
+      <div class="event-stats">
+        {% if ev.win_pct %}
+          {% set ec = "win100" if ev.win_pct >= 75 else ("win75" if ev.win_pct >= 55 else ("win50" if ev.win_pct >= 35 else "win25")) %}
+          <span class="event-winpct {{ ec }}"
+                data-wp-predicted="{{ "%.0f"|format(ev.win_pct) }}"
+                {% if ev.win_pct_lastweek is not none %}data-wp-lastweek="{{ "%.0f"|format(ev.win_pct_lastweek) }}"{% endif %}>{{ "%.0f"|format(ev.win_pct) }}% win</span>
+        {% endif %}
+        {% if ev.mc_pts %}
+          <span class="event-pts"
+                data-pts-predicted="{{ "%.1f"|format(ev.mc_pts) }}"
+                {% if ev.mc_pts_lastweek is not none %}data-pts-lastweek="{{ "%.1f"|format(ev.mc_pts_lastweek) }}"{% endif %}>{{ "%.1f"|format(ev.mc_pts) }} pts</span>
+        {% endif %}
+      </div>
+    </header>
+
+    <div class="lane-grid" data-mode="predicted">
+      {% for lane in ev.lanes_predicted %}
+        <div class="lane lane-{{ lane.team }} {% if lane.pick_one %}lane-pickone-row{% elif not lane.swimmer %}lane-empty{% endif %}">
+          <div class="lane-num">{{ lane.lane }}</div>
+          <div class="lane-swimmer">
+            {% if lane.pick_one %}
+              <select class="lane-pick{% if lane.swimmer %} has-pick{% endif %}" data-event="{{ ev.event }}" data-lane="{{ lane.lane }}" onchange="onLanePick(this)" title="No swimmer has a real time for this stroke — pick who swims this lane">
+                <option value="">no real time · pick one</option>
+                {% for c in lane.pick_candidates or [] %}
+                  <option value="{{ c }}"{% if c == lane.swimmer %} selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+              </select>
+              {% if lane.swimmer %}<span class="lane-norealtime" title="Picked by you — no recorded time for this stroke">no time</span>{% endif %}
+            {% elif lane.swimmer %}
+              <span class="lane-name" title="{{ lane.swimmer }}">{% if lane.is_swim_up %}<span class="swim-up" title="Swimming up">↑</span>{% endif %}{{ lane.swimmer }}</span>
+              {% if lane.no_real_time %}<span class="lane-norealtime" title="No recorded time for this stroke — filling the lane">no real time</span>{% elif lane.time %}<span class="lane-time">{{ "%.2f"|format(lane.time) }}</span>{% endif %}
+            {% else %}
+              <span class="lane-empty-mark">—</span>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if ev.lanes_lastweek %}
+      <div class="lane-grid lane-grid--hidden" data-mode="lastweek">
+        {% for lane in ev.lanes_lastweek %}
+          <div class="lane lane-{{ lane.team }} {% if lane.pick_one %}lane-pickone-row{% elif not lane.swimmer %}lane-empty{% endif %}">
+            <div class="lane-num">{{ lane.lane }}</div>
+            <div class="lane-swimmer">
+              {% if lane.pick_one %}
+                <span class="lane-pickone" title="Pick who swims this lane on the Predicted view">{{ lane.swimmer or "no real time · pick one" }}</span>
+              {% elif lane.swimmer %}
+                <span class="lane-name" title="{{ lane.swimmer }}">{% if lane.is_swim_up %}<span class="swim-up" title="Swimming up">↑</span>{% endif %}{{ lane.swimmer }}</span>
+                {% if lane.time %}<span class="lane-time">{{ "%.2f"|format(lane.time) }}</span>{% endif %}
+              {% else %}
+                <span class="lane-empty-mark">—</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+{% endmacro %}
+
+{# Boys (left) and Girls (right), each ordered by age group then stroke
+   (free → back → breast → fly). Event labels look like "8U Boys 25-free":
+   split()[0]=age, split()[1]=gender, split('-')[-1]=stroke token. #}
+<div class="lineup-events two-col">
+  {% set age_order    = ['8U', '9-10', '11-12', '13-14', '15-18'] %}
+  {% set stroke_order = ['free', 'back', 'breast', 'fly'] %}
+  {% for col_gen in ['Boys', 'Girls'] %}
+    <div class="events-col">
+      <h3 class="events-col-title">{{ col_gen }}</h3>
+      {% for age in age_order %}
+        {% for stroke in stroke_order %}
+          {% for ev in payload.events
+                if ev.event.split()[1] == col_gen
+                and ev.event.split()[0] == age
+                and ev.event.split('-')[-1] == stroke %}
+            {{ render_event(ev) }}
+          {% endfor %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>
+
+{# ─── Relays section ─────────────────────────────────────────────── #}
+{% if payload.relay_data %}
+  {% set relay_grand_total = namespace(v=0.0) %}
+  <h2 class="relays-header">Relays</h2>
+  {% for gender in ["Boys", "Girls"] %}
+    {% if payload.relay_data.get(gender) %}
+      {% set gd = payload.relay_data[gender] %}
+      {% set g_total = namespace(v=0.0) %}
+      <h3 class="relay-gender-header">{{ gender }}</h3>
+      <div class="relay-list">
+        {% for relay in gd.age_relays %}
+          {% set ec = "win100" if relay.win_pct >= 75 else ("win75" if relay.win_pct >= 55 else ("win50" if relay.win_pct >= 35 else "win25")) %}
+          {% set is_free = relay.legs | selectattr("stroke", "equalto", "free") | list | length == relay.legs | length %}
+          {% set first_leg = relay.legs[0] if relay.legs else {} %}
+          {% set style_str = "4×" ~ (first_leg.get("distance","?")|string) ~ "m " ~ ("Free" if is_free else "Medley") %}
+          <div class="relay-card">
+            <header class="relay-card-header">
+              <div class="relay-card-name">{{ relay.name }}<span class="relay-card-style">· {{ style_str }}</span></div>
+              <div class="relay-card-stats">
+                <span class="relay-time">{{ "%.2f"|format(relay.total_time) }}s</span>
+                <span class="relay-winpct {{ ec }}">{{ "%.0f"|format(relay.win_pct) }}%</span>
+                <span class="relay-exp">{{ "%.2f"|format(relay.exp_pts) }} pts</span>
+              </div>
+            </header>
+            <ol class="relay-legs">
+              {% for leg in relay.legs %}
+                <li>
+                  <span class="leg-stroke">{{ leg.stroke|title }}</span>
+                  <span class="leg-name">{{ leg.swimmer or "— no eligible swimmer —" }}</span>
+                  <span class="leg-time">{% if leg.mean %}{{ "%.2f"|format(leg.mean) }}s{% else %}N/A{% endif %}</span>
+                </li>
+              {% endfor %}
+            </ol>
+          </div>
+          {% set g_total.v = g_total.v + relay.exp_pts %}
+        {% endfor %}
+
+        {% if gd.mixed %}
+          {% set mx = gd.mixed %}
+          {% set ec = "win100" if mx.win_pct >= 75 else ("win75" if mx.win_pct >= 55 else ("win50" if mx.win_pct >= 35 else "win25")) %}
+          <div class="relay-card">
+            <header class="relay-card-header">
+              <div class="relay-card-name">Mixed Age Relay<span class="relay-card-style">· 4×50m Free</span></div>
+              <div class="relay-card-stats">
+                <span class="relay-time">{{ "%.2f"|format(mx.total_time) }}s</span>
+                <span class="relay-winpct {{ ec }}">{{ "%.0f"|format(mx.win_pct) }}%</span>
+                <span class="relay-exp">{{ "%.2f"|format(mx.exp_pts) }} pts</span>
+              </div>
+            </header>
+            <ol class="relay-legs">
+              {% for leg in mx.legs %}
+                <li>
+                  <span class="leg-stroke">{{ leg.slot }}</span>
+                  <span class="leg-name">{{ leg.swimmer or "— no eligible swimmer —" }}</span>
+                  <span class="leg-time">{% if leg.mean %}{{ "%.2f"|format(leg.mean) }}s{% else %}N/A{% endif %}</span>
+                </li>
+              {% endfor %}
+            </ol>
+          </div>
+          {% set g_total.v = g_total.v + mx.exp_pts %}
+        {% endif %}
+      </div>
+      <div class="relay-gender-total">{{ gender }} relay total: <strong>{{ "%.2f"|format(g_total.v) }} pts</strong></div>
+      {% set relay_grand_total.v = relay_grand_total.v + g_total.v %}
+    {% endif %}
+  {% endfor %}
+  <div class="relay-grand-total">
+    Grand total relay expected points: <strong>{{ "%.2f"|format(relay_grand_total.v) }}</strong>
+  </div>
+{% endif %}

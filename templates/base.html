@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ page_title or "Lane Lab" }}{% endblock %} . Lane Lab</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}?v=2">
+  <link rel="icon" type="image/png" sizes="180x180" href="{{ url_for('static', filename='favicon.png') }}?v=2">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Exo+2:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="liquid-goo">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur"/>
+      <feColorMatrix in="blur" mode="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0 0 0 30 -15" result="goo"/>
+      <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+    </filter>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <a href="/" class="logo" aria-label="Lane Lab home">
+    <img src="{{ url_for('static', filename='logo_dark.png') }}" alt="Lane Lab" class="logo-img">
+  </a>
+  <div class="nav-links" data-liquid data-liquid-active="a.active">
+    {% set links = [
+      ('/',         'Home',      'home'),
+      ('/setup',    'Build',     'setup'),
+      ('/lineup',   'Results',   'lineup'),
+      ('/check',    'Check',     'check'),
+    ] %}
+    {% for href, label, page_id in links %}
+      <a href="{{ href }}" class="{{ 'active' if active_page == page_id else '' }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+  <div class="nav-side">
+    {% if nav_meet %}
+      <a href="/lineup" class="nav-meet"
+         title="Current lineup: {{ nav_meet.you }} vs {{ nav_meet.opp }}{% if nav_meet.week %} · Week {{ nav_meet.week }}{% endif %}">
+        <span class="nav-meet-team">{{ nav_meet.you_label }}</span>
+        <span class="nav-meet-vs">vs</span>
+        <span class="nav-meet-team">{{ nav_meet.opp_label }}</span>
+        {% if nav_meet.week %}<span class="nav-meet-week">Wk {{ nav_meet.week }}</span>{% endif %}
+      </a>
+    {% endif %}
+    {% if has_lineup and active_page in ['lineup', 'check'] %}
+      <button id="clearLineupBtn" class="clear-lineup-btn" onclick="clearLineupClick()"
+              title="Wipe the in-memory + saved lineup. Like restarting the app — use after uploading new ladder/roster data, or when results look stale.">
+        Clear lineup
+      </button>
+    {% endif %}
+  </div>
+</nav>
+
+<main class="page">
+  {% block content %}{% endblock %}
+</main>
+
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+{% block scripts %}{% endblock %}
+
+</body>
+</html>
