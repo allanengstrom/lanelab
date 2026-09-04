@@ -29,3 +29,7 @@ data/
 
 # Trained models (train your own: python3 train_coach_predictor.py)
 *.pkl
+
+# Local study notes and build artifacts
+*.local.md
+native/mc_score
