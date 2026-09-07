@@ -61,31 +61,49 @@ static int index_events(Entry *entries, int n) {
     return n_events;
 }
 
-/* ---------- YOUR PART ----------------------------------------------------- */
-/*
- * simulate_meet: run `sims` simulations of the whole meet.
+/* Run `sims` simulations of the whole meet.
  *
- * For ONE simulation:
- *   1. For every entry, draw a time: rand_normal(e->mean, e->std).
- *   2. For every event (use event_id to group), find the three fastest
- *      drawn times across BOTH teams in that event.
- *   3. Award 5 points for 1st, 3 for 2nd, 1 for 3rd to the entry's team.
- *      (Events with fewer than 3 entries award only the places that exist.)
- *
- * Accumulate each team's points over all simulations, then divide by `sims`
- * to fill expected[0] and expected[1].
- *
- * Suggested shape: a times[MAX_ENTRIES] array per simulation, then for each
- * event a small pass to find its top three (no need to sort everything —
- * three linear scans, or one scan tracking best/second/third, both work).
- * Keep it simple first; make it fast after it agrees with the reference.
+ * Each simulation draws a time for every entry, then for each event awards
+ * 5-3-1 to the teams of the three fastest drawn times (fewer places if the
+ * event has fewer than three entries). expected[] receives each team's
+ * average points per simulation.
  */
 static void simulate_meet(Entry *entries, int n, int n_events, long sims,
                           double expected[2]) {
-    (void)entries; (void)n; (void)n_events; (void)sims;   /* TODO: remove */
-    expected[0] = 0.0;   /* TODO: implement */
-    expected[1] = 0.0;
+    double total[2] = {0,0};
+    double times[MAX_ENTRIES];
+    for (long s = 0; s < sims; s++) {
+        for (int i = 0; i < n; i++) {
+            times[i] = rand_normal(entries[i].mean, entries[i].std);
+        }
+        for (int j = 0; j < n_events; j++) {
+            int fst_adr = -1;
+            int sec_adr = -1;
+            int thr_adr = -1;
+            for (int k = 0; k < n; k++) {
+                if (entries[k].event_id != j) continue;
+                if (fst_adr == -1 || times[k] < times[fst_adr]) {
+                    thr_adr = sec_adr;
+                    sec_adr = fst_adr;
+                    fst_adr = k;
+                }
+                else if (sec_adr == -1 || times[k] < times[sec_adr]) {
+                    thr_adr = sec_adr;
+                    sec_adr = k;
+                }
+                else if (thr_adr == -1 || times[k] < times[thr_adr]) {
+                    thr_adr = k;
+                }
+            }
+            if (fst_adr != -1) { total[entries[fst_adr].team] += 5; }
+            if (sec_adr != -1) { total[entries[sec_adr].team] += 3; }
+            if (thr_adr != -1) { total[entries[thr_adr].team] += 1; }
+        }
+    }
+    expected[0] = total[0]/sims;
+    expected[1] = total[1]/sims;
 }
+
 
 /* ---------- main / timing harness ---------------------------------------- */
 

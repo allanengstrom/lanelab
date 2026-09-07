@@ -31,5 +31,9 @@ data/
 *.pkl
 
 # Local study notes and build artifacts
-*.local.md
+*.local.*
 native/mc_score
+native/test
+native/warmup.local
+*.dSYM/
+native/test.c
