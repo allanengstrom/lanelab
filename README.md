@@ -87,6 +87,10 @@ and
 Then open http://127.0.0.1:5000/ and pick two demo teams. Cedar Hollow vs Owl
 Creek, any week, is a good first run.
 
+The Monte Carlo scoring core also exists as a standalone C port in
+[native/](native/) — same model, about 10x the throughput of the Python
+implementation, with a README on where the speed does and doesn't come from.
+
 ## Data
 
 Nothing in this repository identifies a real swimmer. Rosters, lineups, and
